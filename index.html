@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mozaik Design — Enterprise GTM Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+  :root{ --kraken-purple:#7132f5; --kraken-purple-dark:#5741d8; --kraken-purple-deep:#5b1ecf; --kraken-purple-subtle:rgba(133,91,251,0.16);
+    --near-black:#101114; --cool-gray:#686b82; --silver-blue:#9497a9; --border-gray:#dedee5; --bg-2:#fafafb; --bg-3:#f4f4f7;
+    --success:#149e61; --success-text:#026b3f; --danger:#e2495b; --danger-text:#b01a2b; --warning:#d59307; }
+  body { font-family:'IBM Plex Sans', system-ui, sans-serif; background:#f3f2f7; color:var(--near-black); }
+  h1,h2,h3 { letter-spacing:-0.5px; }
+  .card { background:#ffffff; border:1px solid var(--border-gray); border-radius:16px; box-shadow:0 4px 24px rgba(16,17,20,0.06); }
+  .tab-btn { transition:all 180ms cubic-bezier(.4,0,.2,1); border-bottom:2px solid transparent; }
+  .tab-btn.active { color:var(--kraken-purple); border-bottom-color:var(--kraken-purple); }
+  .kpi-num { font-variant-numeric: tabular-nums; }
+  .badge { font-size:.65rem; padding:2px 8px; border-radius:8px; font-weight:600; }
+  input[type=range] { accent-color:var(--kraken-purple); }
+  /* Map dark-theme utility classes onto the Kraken light palette */
+  .text-white { color:var(--near-black)!important; }
+  .text-gray-200,.text-gray-300,.text-gray-400 { color:var(--cool-gray)!important; }
+  .text-gray-500 { color:var(--silver-blue)!important; }
+  .text-amber-300,.text-amber-400,.text-amber-500 { color:var(--kraken-purple)!important; }
+  .text-emerald-300,.text-emerald-400 { color:var(--success)!important; }
+  .text-sky-300,.text-sky-400 { color:var(--kraken-purple-dark)!important; }
+  .text-rose-400 { color:var(--danger-text)!important; }
+  .text-violet-300 { color:var(--kraken-purple-deep)!important; }
+  .bg-gray-900 { background:var(--bg-3)!important; border:1px solid #e9e8f0; }
+  .bg-amber-900 { background:var(--kraken-purple-subtle)!important; }
+  .bg-emerald-900 { background:rgba(20,158,97,.16)!important; }
+  .bg-emerald-900\/20 { background:rgba(20,158,97,.08)!important; }
+  .bg-sky-900 { background:rgba(87,65,216,.12)!important; }
+  .bg-violet-900 { background:rgba(91,30,207,.12)!important; }
+  .border-gray-700,.border-gray-800 { border-color:var(--border-gray)!important; }
+  .border-amber-700,.border-amber-800 { border-color:var(--kraken-purple)!important; }
+  .border-emerald-800 { border-color:var(--success)!important; }
+  /* Accounts tab (Clay-style grid, Kraken light) */
+  .acc-view { padding:5px 12px; border-radius:12px; border:1px solid var(--border-gray); background:#fff; cursor:pointer; font-size:12px; color:var(--cool-gray); transition:all 120ms cubic-bezier(.4,0,.2,1); }
+  .acc-view:hover { background:var(--kraken-purple-subtle); }
+  .acc-view.active { background:var(--kraken-purple); color:#fff; border-color:var(--kraken-purple); font-weight:600; }
+  .acc-flt { padding:5px 8px; border:1px solid var(--border-gray); border-radius:10px; font-size:12px; background:#fff; color:var(--near-black); }
+  .acc-btn { padding:6px 12px; border-radius:12px; border:1px solid var(--kraken-purple-dark); background:#fff; cursor:pointer; font-size:12px; color:var(--kraken-purple); font-weight:600; }
+  .acc-btn:hover { background:var(--kraken-purple-subtle); }
+  #accGrid { border-collapse:collapse; width:100%; min-width:1200px; background:#fff; font-size:12px; }
+  #accGrid th { position:sticky; top:0; background:var(--bg-2); z-index:10; font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--cool-gray); padding:8px 10px; text-align:left; border-bottom:1px solid var(--border-gray); border-right:1px solid var(--border-gray); white-space:nowrap; cursor:pointer; }
+  #accGrid td { padding:7px 10px; border-bottom:1px solid #ececf1; border-right:1px solid var(--bg-3); vertical-align:middle; white-space:nowrap; color:var(--near-black); }
+  #accGrid tr.row:hover { background:var(--bg-3); cursor:pointer; }
+  .acc-tag { display:inline-block; padding:2px 8px; border-radius:8px; font-size:11px; font-weight:600; }
+  .at1 { background:var(--kraken-purple-subtle); color:var(--kraken-purple-deep); } .at2 { background:rgba(87,65,216,.10); color:var(--kraken-purple-dark); } .at3 { background:var(--bg-3); color:var(--cool-gray); }
+  .acc-bar { display:inline-block; width:46px; height:6px; border-radius:3px; background:#ececf1; vertical-align:middle; margin-left:6px; overflow:hidden; }
+  .acc-bar i { display:block; height:100%; border-radius:3px; }
+  .cf-Verified{color:var(--success-text);font-weight:600;} .cf-High{color:var(--success);} .cf-Medium{color:var(--warning);} .cf-Low{color:var(--danger-text);}
+  .acc-sel { border:none; background:transparent; font-size:12px; font-weight:600; cursor:pointer; color:var(--near-black); }
+  .acc-sel option { background:#fff; }
+  .acc-sig { font-size:11px; color:var(--cool-gray); max-width:170px; overflow:hidden; text-overflow:ellipsis; display:inline-block; vertical-align:middle; }
+  #accPanel { width:0; transition:width 280ms cubic-bezier(.4,0,.2,1); overflow:hidden; background:#fff; border-left:1px solid var(--border-gray); position:fixed; right:0; top:0; height:100vh; z-index:50; box-shadow:0 4px 24px rgba(0,0,0,.08); }
+  #accPanel.open { width:420px; overflow-y:auto; }
+  .acc-pi { padding:24px; width:420px; }
+  .acc-pi h2 { font-size:18px; margin-bottom:2px; color:var(--near-black); font-weight:700; letter-spacing:-0.5px; }
+  .acc-fld { margin-bottom:10px; }
+  .acc-fld label { display:block; font-size:10px; text-transform:uppercase; color:var(--cool-gray); margin-bottom:3px; letter-spacing:.04em; }
+  .acc-fld input, .acc-fld textarea, .acc-fld select { width:100%; padding:7px 9px; border:1px solid var(--border-gray); border-radius:10px; font-size:12px; font-family:inherit; background:#fff; color:var(--near-black); }
+  .acc-fld input:focus, .acc-fld textarea:focus { outline:2px solid var(--kraken-purple); outline-offset:2px; }
+  .acc-fld textarea { min-height:54px; resize:vertical; }
+  .acc-c { display:flex; gap:8px; align-items:flex-start; padding:6px 8px; border:1px solid var(--border-gray); border-radius:8px; margin-bottom:5px; font-size:12px; background:var(--bg-2); color:var(--near-black); }
+  .acc-sh { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--cool-gray); margin:16px 0 6px; border-top:1px solid var(--border-gray); padding-top:12px; }
+  @media(max-width:760px){ #accPanel.open{width:100vw;} .acc-pi{width:100vw;} }
+  table th { color:#686b82; font-weight:600; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; }
+  .persona-card:hover, .seg:hover { border-color:#7132f5; cursor:pointer; }
+
+  @keyframes pulse {
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:0.4;transform:scale(0.85)}
+  }
+</style>
+</head>
+<body class="min-h-screen">
+<!-- Password Gate -->
+<div id="pwGate" style="position:fixed;inset:0;z-index:9999;background:#0d0e12;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+  <div style="font-family:'IBM Plex Sans',sans-serif;text-align:center;max-width:340px">
+    <div style="font-size:22px;font-weight:700;color:#fff;margin-bottom:4px">Mozaik GTM</div>
+    <div style="font-size:13px;color:#686b82;margin-bottom:28px">Team access only — enter password to continue</div>
+    <input id="pwInput" type="password" placeholder="Password" autocomplete="current-password"
+      style="width:100%;padding:12px 14px;background:#1a1b22;border:1px solid #2e3040;border-radius:8px;color:#fff;font-size:15px;outline:none;box-sizing:border-box"
+      onkeydown="if(event.key==='Enter')checkPw()">
+    <div id="pwErr" style="color:#f87171;font-size:12px;min-height:18px;margin-top:8px"></div>
+    <button onclick="checkPw()" style="margin-top:8px;width:100%;padding:12px;background:#7132f5;border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:600;cursor:pointer">Enter</button>
+  </div>
+</div>
+<script>
+(function(){
+  var HASH="d48a7d11abbda39e000b9ebef880af0bb1721c18df2e97dc30e6201f5511a832";
+  if(sessionStorage.getItem("mozaikAuth")===HASH){document.getElementById("pwGate").style.display="none";}
+  window.checkPw=async function(){
+    var v=document.getElementById("pwInput").value;
+    var buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(v));
+    var hex=Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,"0");}).join("");
+    if(hex===HASH){sessionStorage.setItem("mozaikAuth",HASH);document.getElementById("pwGate").style.display="none";}
+    else{document.getElementById("pwErr").textContent="Incorrect password";document.getElementById("pwInput").value="";}
+  };
+})();
+</script>
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-white">Mozaik Design <span class="text-amber-500">Enterprise GTM</span></h1>
+      <p class="text-sm text-gray-400">Contract furniture + lighting · İstanbul → Ankara → İzmir · All figures in <span class="text-amber-400 font-semibold">EUR (€)</span></p>
+    </div>
+    <div class="flex gap-2">
+      <span class="badge bg-emerald-900 text-emerald-300">Target: +€10–20M / 12–24 mo</span>
+      <span class="badge bg-sky-900 text-sky-300">ICP: Design firms 15–50+</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-5 border-b border-gray-800 mb-6 overflow-x-auto text-sm font-medium text-gray-400">
+    <button class="tab-btn active py-3 whitespace-nowrap" data-tab="guide">Start here</button>
+    <button class="tab-btn py-3 whitespace-nowrap" data-tab="overview">Overview</button>
+    <button class="tab-btn py-3 whitespace-nowrap" data-tab="accounts">Accounts <span class="badge bg-amber-900 text-amber-300 ml-1" id="accCount">45</span></button>
+    <button class="tab-btn py-3 whitespace-nowrap" data-tab="perf">Performance</button>
+    <button class="tab-btn py-3 whitespace-nowrap" data-tab="signals">Signals</button>
+    <button class="tab-btn py-3 whitespace-nowrap" data-tab="market">Market (TAM/SAM)</button>
+    <button class="tab-btn py-3 whitespace-nowrap" data-tab="icp">ICP & Personas</button>
+    <button class="tab-btn py-3 whitespace-nowrap" data-tab="outbound">Outbound Engine</button>
+    <button class="tab-btn py-3 whitespace-nowrap" data-tab="plan">14-Day Plan</button>
+  </div>
+
+  <!-- ============ GUIDE / START HERE ============ -->
+  <section id="tab-guide" class="tab-panel">
+
+    <!-- UVP — top of page, first thing reps see -->
+    <div style="background:linear-gradient(135deg,#1a0e3a 0%,#0d1428 100%);border:1px solid #7132f5;border-radius:14px;padding:20px 24px;margin-bottom:16px">
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:#7132f5;text-transform:uppercase;margin-bottom:6px">Your Unique Value Proposition — memorise these 3 lines</p>
+      <p style="font-size:15px;font-weight:600;color:#fff;margin-bottom:16px">Every time you speak to an architect or designer, lead with these — in this order:</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+        <div style="background:rgba(113,50,245,0.12);border:1px solid rgba(113,50,245,0.35);border-radius:10px;padding:14px">
+          <p style="color:#a78bfa;font-weight:700;font-size:13px;margin-bottom:6px">1 · Furniture + Lighting, one factory</p>
+          <p style="color:#c4b5fd;font-size:13px">One contract, one delivery schedule, one accountable party. Architects hate managing multiple suppliers — lead with this.</p>
+        </div>
+        <div style="background:rgba(113,50,245,0.12);border:1px solid rgba(113,50,245,0.35);border-radius:10px;padding:14px">
+          <p style="color:#a78bfa;font-weight:700;font-size:13px;margin-bottom:6px">2 · Import quality, −30–50% cost</p>
+          <p style="color:#c4b5fd;font-size:13px">EUR-fixed quotes valid 90 days. No customs, no port delays. Same quality they know from European brands — at half the price.</p>
+        </div>
+        <div style="background:rgba(113,50,245,0.12);border:1px solid rgba(113,50,245,0.35);border-radius:10px;padding:14px">
+          <p style="color:#a78bfa;font-weight:700;font-size:13px;margin-bottom:6px">3 · True custom manufacturing</p>
+          <p style="color:#c4b5fd;font-size:13px">Built from the designer's own drawings — not catalog-only. This is what closes deals with serious design firms.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card p-5 mb-4 border border-amber-700">
+      <h3 class="font-semibold text-amber-400 mb-2">Welcome — read this first (5 minutes)</h3>
+      <p class="text-sm text-gray-300 leading-relaxed">This dashboard is our plan to grow Mozaik's enterprise (Kurumsal) business by <b class="text-white">€10 million in 12 months</b>. The plan in one paragraph: instead of waiting for hotels and companies to find us, <b class="text-white">we will go to the people who choose furniture for them</b> — architecture and interior design firms. There are only about 150–250 firms in Turkey that fit what we sell. Our job is to build a relationship with each one, so that every time they design a hotel or office, they specify Mozaik furniture and lighting instead of imported brands. One good architect relationship = many projects, year after year. Everything else in this dashboard — the numbers, lists, and steps — exists to make that happen.</p>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <h3 class="font-semibold text-white mb-3">Your first week with this dashboard</h3>
+      <div class="text-sm text-gray-300 leading-relaxed space-y-2">
+        <p><b class="text-white">1.</b> Open the <b class="text-amber-400">Accounts</b> tab. Filter by your name under "Owner" — those are your firms.</p>
+        <p><b class="text-white">2.</b> Sort by ICP Score. Start from the top (green scores).</p>
+        <p><b class="text-white">3.</b> Click a firm → complete the research checklist (find the people, check for a signal) before any contact.</p>
+        <p><b class="text-white">4.</b> Follow the 6-touch sequence in the <b class="text-amber-400">Outbound Engine</b> tab. Log every touch in the activity log.</p>
+        <p><b class="text-white">5.</b> Update the Status dropdown as things move: Contacted → Replied → Meeting → Qualified → Quoted → Won. The pipeline numbers update themselves.</p>
+        <p><b class="text-white">6.</b> Stuck on a term? Come back to this tab. Stuck on a deal? Bring it to Balamir's weekly pipeline review.</p>
+      </div>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <h3 class="font-semibold text-white mb-3">The terms, in plain language</h3>
+      <p class="text-xs text-gray-500 mb-4">Click any term to expand. Every definition includes a Mozaik example.</p>
+
+      <p class="text-xs uppercase tracking-wide text-amber-400 mb-2">Strategy words</p>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">GTM — Go-To-Market</summary><p class="text-sm text-gray-300 mt-2">Simply: the plan for how we find customers and sell to them. Who we target, what we say, who does what. This whole dashboard is our GTM plan.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">ICP — Ideal Customer Profile</summary><p class="text-sm text-gray-300 mt-2">A precise description of our perfect customer. Not "anyone who buys furniture" — that wastes time. Ours: <b class="text-white">architecture/interior design firms with 15–50+ people, in İstanbul/Ankara/İzmir, working on hotels and offices</b>. If a firm doesn't match, we politely pass and spend the time on one that does. Example: a solo decorator furnishing one villa = NOT our ICP (send to Retail). A 30-person İstanbul studio designing a hotel = exactly our ICP.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Persona</summary><p class="text-sm text-gray-300 mt-2">The specific <b class="text-white">person</b> inside the firm we talk to. We have three: <b class="text-white">Persona A</b> = the founding partner/boss (decides which brands the firm uses). <b class="text-white">Persona B</b> = the project lead/senior architect (does the daily work, shortlists suppliers — our easiest entry point). <b class="text-white">Persona C</b> = procurement at fit-out companies (signs the purchase order). You talk differently to each: the boss cares about reputation and margins; the project lead cares about fast quotes and good drawings.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">TAM / SAM / SOM</summary><p class="text-sm text-gray-300 mt-2">Three circles, biggest to smallest. <b class="text-white">TAM</b> (Total Addressable Market) = ALL money spent yearly on contract furniture+lighting for hotels/offices in Turkey (~€720M–1B). <b class="text-white">SAM</b> (Serviceable) = the part WE could realistically serve — premium projects via design firms (~€250–450M). <b class="text-white">SOM</b> (Obtainable) = the slice we're aiming to win: €10–20M. Why it matters: it proves the goal is realistic — we need only 3–6% of our reachable market.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">ABM — Account-Based Marketing ("not blasts")</summary><p class="text-sm text-gray-300 mt-2">Two ways to sell: send 10,000 generic emails and hope (a "blast"), or pick 200 specific firms and treat each like a VIP — research them, learn their projects, write personal messages. With only ~200 firms in our universe, blasting would burn the whole market in a week. ABM means: <b class="text-white">quality on every single account, because there are no spare accounts.</b></p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Outbound vs Inbound</summary><p class="text-sm text-gray-300 mt-2"><b class="text-white">Inbound</b> = customer comes to us (walks into the showroom, fills a website form). <b class="text-white">Outbound</b> = WE go to them first — email, LinkedIn, phone — before they've ever asked. This plan is outbound: we are not waiting.</p></details>
+
+      <p class="text-xs uppercase tracking-wide text-amber-400 mb-2 mt-5">Funnel words (how a stranger becomes a customer)</p>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Funnel</summary><p class="text-sm text-gray-300 mt-2">Picture a kitchen funnel: wide at the top, narrow at the bottom. Many firms go in the top, few signed contracts come out the bottom. Stages: we contact a firm → some reply (<b class="text-white">engaged</b>) → some agree to <b class="text-white">meet</b> → some have a real project (<b class="text-white">qualified</b>) → some ask for a <b class="text-white">quote</b> → some sign (<b class="text-white">closed/won</b>). People fall out at every stage — that's normal and expected. The math: to get 20 signed deals, we need ~50 quotes, ~85 qualified projects, ~167 meetings.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Lead / Account / Opportunity</summary><p class="text-sm text-gray-300 mt-2"><b class="text-white">Account</b> = a firm on our list (e.g., Autoban). <b class="text-white">Lead</b> = a person there we've started talking to. <b class="text-white">Opportunity</b> = a real, live chance to sell: they have an actual project, with a budget, happening soon. An account becomes an opportunity only when there's a real project on the table.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Qualified / Qualification</summary><p class="text-sm text-gray-300 mt-2">Checking if a conversation is worth pursuing seriously, so we don't waste months on deals that were never real. Our checklist: Do they have an active project with FF&E budget ≥ €250K? Are we talking to the boss or project lead (not just info@)? Is it a hotel/office project? Will they decide within 1–3 months? All yes = <b class="text-white">qualified</b>.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Pipeline</summary><p class="text-sm text-gray-300 mt-2">All your open deals and their money value, added up. If you have 3 qualified projects worth €400K, €600K and €500K, your pipeline is €1.5M. Pipeline is the <b class="text-white">future</b> — it tells us in June whether October will be good. The Accounts tab calculates it automatically.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Conversion rate / Close rate</summary><p class="text-sm text-gray-300 mt-2">The percentage that moves from one funnel stage to the next. "40% close rate" = of every 10 quotes we send, 4 become contracts. These percentages are how we calculated that €10M requires 167 meetings. If our real rates turn out better, we need fewer meetings; worse, more.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Avg deal size / AOV</summary><p class="text-sm text-gray-300 mt-2">The typical value of one signed contract — we assume <b class="text-white">€500K</b> (midpoint of €250K–1M). Why it matters: €10M target ÷ €500K = 20 deals needed. If real deals average €300K, we'd need 33 deals — much harder. That's why checking real past deals is task #1.</p></details>
+
+      <p class="text-xs uppercase tracking-wide text-amber-400 mb-2 mt-5">Daily work words</p>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Signal / Trigger event</summary><p class="text-sm text-gray-300 mt-2">News that tells us a firm needs furniture <b class="text-white">soon</b> — the perfect moment to call. Examples: the firm won a new hotel project; a hotel announced renovation; a company is moving HQ. Timing is everything: calling a firm mid-project beats calling them in a quiet month. İrem hunts for signals; reps act on them within days.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Tier (T1 / T2 / T3)</summary><p class="text-sm text-gray-300 mt-2">Priority ranking. <b class="text-white">Tier 1</b> = best fit, contact first (big hospitality/office firms). <b class="text-white">Tier 2</b> = good fit, second wave. <b class="text-white">Tier 3</b> = verify before spending time. Always work Tier 1 before Tier 2.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">ICP Score (0–100)</summary><p class="text-sm text-gray-300 mt-2">An automatic number showing how closely an account matches our ideal customer. Points for: right tier, hospitality/office focus, verified data, an active signal, known contact people. <b class="text-white">Green (70+) = call today. Grey = research first.</b> Sort the Accounts table by this column to know who's next.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Sequence / Touch</summary><p class="text-sm text-gray-300 mt-2">A <b class="text-white">touch</b> = one contact attempt (an email, a LinkedIn message, a call). A <b class="text-white">sequence</b> = a planned series of touches over ~3 weeks: LinkedIn note → email → phone call → case study email → factory visit invitation from your head → polite goodbye email. Why 6 touches? Most people don't answer the first one — that's normal, not rejection. The full sequence is in the Outbound Engine tab.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">Specifier / Trade program</summary><p class="text-sm text-gray-300 mt-2">A <b class="text-white">specifier</b> is someone who chooses (specifies) products for someone else's money — the architect picks the chairs, the hotel pays. Architects are specifiers, which is why one relationship = many projects. A <b class="text-white">trade program</b> is the standard benefits we give them for choosing us: trade discount or commission, 48-hour quotes, free samples. Architects ask about this in the first meeting — which is why we formalize it before any outreach.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">FF&E</summary><p class="text-sm text-gray-300 mt-2">Furniture, Fixtures & Equipment — the industry term for everything in a building that isn't the building itself: furniture, lighting, decoration. When an architect says "the FF&E budget is €800K," that's the pot of money we're competing for.</p></details>
+      <details class="bg-gray-900 rounded-lg p-3 mb-2"><summary class="cursor-pointer text-sm font-semibold text-white">CRM</summary><p class="text-sm text-gray-300 mt-2">Customer Relationship Management — the shared record of every conversation with every account, so nothing is forgotten and nobody calls the same firm twice. For now, the Accounts tab here is our CRM. Rule: <b class="text-white">if it's not logged, it didn't happen.</b></p></details>
+    </div>
+
+    <div class="card p-5 mb-4">
+      <h3 class="font-semibold text-white mb-3">How the big numbers connect (the whole plan in one chain)</h3>
+      <div class="text-sm text-gray-300 leading-relaxed space-y-2">
+        <p>1. We want <b class="text-amber-400">€10M</b> in new enterprise revenue in 12 months.</p>
+        <p>2. An average deal is <b class="text-amber-400">€500K</b> → so we need <b class="text-amber-400">20 signed deals</b>.</p>
+        <p>3. Not every quote wins (≈40% do) → we need <b class="text-amber-400">~50 quotes</b> sent.</p>
+        <p>4. Not every meeting has a real project behind it → we need <b class="text-amber-400">~167 meetings</b>.</p>
+        <p>5. That's about <b class="text-amber-400">4 meetings per week</b> across the team — roughly 1 per account owner. Demanding, but doable.</p>
+        <p>6. And since only <b class="text-amber-400">150–250 firms</b> in Turkey fit our profile, we'll meet nearly all of them — so every single relationship matters. No burned bridges, no lazy emails.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OVERVIEW ============ -->
+  <section id="tab-overview" class="tab-panel hidden">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+      <div class="card p-4"><p class="text-xs text-gray-400">12-mo Target (defensible)</p><p class="kpi-num text-2xl font-bold text-white">€10M</p><p class="text-xs text-emerald-400">€20M = 24-mo path</p></div>
+      <div class="card p-4"><p class="text-xs text-gray-400">Avg Deal</p><p class="kpi-num text-2xl font-bold text-white">€500K</p><p class="text-xs text-gray-500">range €250K–1M</p></div>
+      <div class="card p-4"><p class="text-xs text-gray-400">Deals Needed</p><p class="kpi-num text-2xl font-bold text-amber-400" id="kpiDeals">20</p><p class="text-xs text-gray-500">@ current avg</p></div>
+      <div class="card p-4"><p class="text-xs text-gray-400">Meetings Needed</p><p class="kpi-num text-2xl font-bold text-amber-400" id="kpiMeetings">170</p><p class="text-xs text-gray-500">≈ 4 / week team</p></div>
+      <div class="card p-4"><p class="text-xs text-gray-400">Target Universe</p><p class="kpi-num text-2xl font-bold text-white">150–250</p><p class="text-xs text-rose-400">firms — ABM, not blasts</p></div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-4 mb-6">
+      <div class="card p-5">
+        <h3 class="font-semibold text-white mb-1">Reverse Funnel to Target</h3>
+        <p class="text-xs text-gray-500 mb-3">What €10M demands, stage by stage</p>
+        <canvas id="funnelChart" height="220"></canvas>
+      </div>
+      <div class="card p-5">
+        <h3 class="font-semibold text-white mb-1">Deal-Size Reality Check <span class="badge bg-amber-900 text-amber-300 ml-1">interactive</span></h3>
+        <p class="text-xs text-gray-500 mb-4">Drag to see how avg deal size changes what the team must deliver</p>
+        <label class="text-xs text-gray-400">Average deal size: <span id="dealSizeLabel" class="text-amber-400 font-bold">€500K</span></label>
+        <input type="range" id="dealSlider" min="250" max="1000" step="50" value="500" class="w-full mb-4">
+        <label class="text-xs text-gray-400">Revenue target: <span id="targetLabel" class="text-amber-400 font-bold">€10M</span></label>
+        <input type="range" id="targetSlider" min="5" max="20" step="1" value="10" class="w-full mb-4">
+        <div class="grid grid-cols-3 gap-3 text-center">
+          <div class="bg-gray-900 rounded-lg p-3"><p class="kpi-num text-xl font-bold text-white" id="calcDeals">20</p><p class="text-xs text-gray-400">deals to close</p></div>
+          <div class="bg-gray-900 rounded-lg p-3"><p class="kpi-num text-xl font-bold text-white" id="calcMeetings">170</p><p class="text-xs text-gray-400">meetings</p></div>
+          <div class="bg-gray-900 rounded-lg p-3"><p class="kpi-num text-xl font-bold" id="calcPerWeek">3.9</p><p class="text-xs text-gray-400">meetings / week</p></div>
+        </div>
+        <p class="text-xs mt-3" id="calcVerdict"></p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ ACCOUNTS (Clay-style workspace) ============ -->
+  <section id="tab-accounts" class="tab-panel hidden">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4" id="accKpis"></div>
+    <div class="flex gap-2 flex-wrap items-center mb-3">
+      <button class="acc-view active" data-aview="all">All</button>
+      <button class="acc-view" data-aview="tier1">Tier 1</button>
+      <button class="acc-view" data-aview="hosp">Hospitality</button>
+      <button class="acc-view" data-aview="office">Office</button>
+      <button class="acc-view" data-aview="signal">Has signal</button>
+      <button class="acc-view" data-aview="verify">Verify</button>
+      <button class="acc-view" data-aview="active">In motion</button>
+      <select class="acc-flt" id="fOwner"><option value="">Owner: all</option><option>Burçin</option><option>Zeynep</option><option>Biricik</option><option>Artun</option><option>İrem</option><option>Elif</option><option>Beliz</option></select>
+      <select class="acc-flt" id="fCity"><option value="">City: all</option><option>İstanbul</option><option>Ankara</option><option>İzmir</option></select>
+      <select class="acc-flt" id="fVal"><option value="">Deal size: all</option><option value="0-250">Under €250K</option><option value="250-500">€250K – €500K</option><option value="500-1000">€500K – €1M</option><option value="1000-9999">Over €1M</option></select>
+      <input type="search" id="q" placeholder="Search firms…" class="acc-flt" style="width:180px">
+      <button class="acc-btn" onclick="remoteLoad()">Sync</button>
+      <span id="syncStatus" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:20px;background:#0d2e1e;color:#34d399;border:1px solid #1a5c38;transition:all 0.3s ease">
+        <span id="syncDot" style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block;animation:pulse 2s infinite"></span>
+        <span id="syncMsg">Auto-save on</span>
+      </span>
+      <button class="acc-btn" onclick="addRow()">+ Add</button>
+      <button class="acc-btn" onclick="exportCSV()">Export CSV</button>
+      <button class="acc-btn" onclick="resetData()" style="color:#f87171">Reset</button>
+    </div>
+    <div class="card overflow-x-auto" style="max-height:65vh; overflow-y:auto">
+      <table id="accGrid">
+        <thead><tr>
+          <th data-s="name">Firm ↕</th><th data-s="city">City</th><th data-s="type">Type</th><th data-s="vert">Verticals</th>
+          <th data-s="tier">Tier</th><th data-s="score">ICP Score ↕</th><th data-s="conf">Data conf.</th>
+          <th data-s="owner">Owner</th><th data-s="signal">Signal</th><th data-s="status">Status</th><th data-s="val">Est. € K</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="text-xs text-gray-500 mt-3">Click a row → account panel with research checklist, personas, signal, activity log. Edits auto-save in this browser. ICP score = tier + vertical fit + data confidence + signal + persona coverage. "Verified" firms confirmed via research June 2026; "Medium/Low" must be verified before outreach.</p>
+  </section>
+  <div id="accPanel"><div class="acc-pi" id="panelInner"></div></div>
+
+  <!-- ============ PERFORMANCE (live) ============ -->
+  <section id="tab-perf" class="tab-panel hidden">
+    <div class="card p-5 mb-4">
+      <h3 class="font-semibold text-white mb-1">Funnel Progress — live <span class="badge bg-emerald-900 text-emerald-300 ml-1">auto-updates from Accounts</span></h3>
+      <p class="text-xs text-gray-500 mb-4">Every time you change an account's status (Contacted, Meeting, Qualified…), these bars move. Targets follow the calculator on the Overview tab.</p>
+      <div id="perfBars" class="space-y-3"></div>
+    </div>
+    <div class="card p-5 mb-4">
+      <h3 class="font-semibold text-white mb-1">Revenue Progress</h3>
+      <div id="perfRevenue" class="mt-3"></div>
+    </div>
+    <div class="card p-5">
+      <h3 class="font-semibold text-white mb-1">Team Leaderboard — who is progressing</h3>
+      <p class="text-xs text-gray-500 mb-3">Counts are accounts that have reached at least that stage. "Stalled" = assigned accounts still at Not contacted/Researching.</p>
+      <div class="overflow-x-auto"><table class="w-full text-sm" id="repTable"></table></div>
+    </div>
+  </section>
+
+  <!-- ============ SIGNALS & SOURCES ============ -->
+  <section id="tab-signals" class="tab-panel hidden">
+    <div class="card p-5 mb-4">
+      <h3 class="font-semibold text-white mb-1">Signal log — all 45 firms hunted (June 2026)</h3>
+      <p class="text-xs text-gray-500 mb-3">Every firm on the list was searched. "Found" = dated 2025–26 evidence. "Weak" = activity visible but undated. Firms not listed here returned nothing current — normal for Turkish design firms, whose news lives on Instagram/LinkedIn rather than the open web. Click any source to verify.</p>
+      <div class="overflow-x-auto"><table class="w-full text-sm" id="sigTable"></table></div>
+    </div>
+    <div class="grid lg:grid-cols-2 gap-4 mb-4">
+      <div class="card p-5">
+        <h3 class="font-semibold text-white mb-2">Market-level signals (affect every account)</h3>
+        <div class="text-sm text-gray-300 space-y-2">
+          <p>• İstanbul leads Europe in 2026 hotel openings — Hilton, Marriott, Radisson, Accor expanding. <a class="text-amber-400" href="https://ftnnews.com/travel-news/news-from-turkey/istanbul-leads-europe-in-new-hotel-openings-for-2026/" target="_blank">source</a></p>
+          <p>• 354 hotel projects completing by end-2026 (~57,000 rooms). <a class="text-amber-400" href="https://money-tourism.gr/en/354-new-hotel-and-tourism-investment-projects-in-turkey-by-2026-27-000-additional-beds/" target="_blank">source</a></p>
+          <p>• ≈€1.9B hotel renovation & modernization spend announced. <a class="text-amber-400" href="https://www.turizmaktuel.com/haber/turkiye-de-2026-ya-kadar-354-yeni-otel-acilacak" target="_blank">source</a></p>
+          <p>• 2026 new-hotel research report: 164 hotels planned. <a class="text-amber-400" href="https://www.turizmprojedergisi.com/haber-detay/2026-yili-yeni-otel-projeleri-arastirma-raporu-yayinlandi/6064" target="_blank">source</a></p>
+          <p>• Mandarin Oriental İstanbul opens late 2026 — local interiors partner unknown; İrem: find who has the FF&E. <a class="text-amber-400" href="https://luxurysignature.net/en/blogs/1766151385/Off-Plan-Projects-in-Istanbul-2026-" target="_blank">source</a></p>
+        </div>
+      </div>
+      <div class="card p-5">
+        <h3 class="font-semibold text-white mb-2">Where we watch — monitoring sources (İrem's weekly routine)</h3>
+        <div class="text-sm text-gray-300 space-y-2">
+          <p>• <a class="text-amber-400" href="https://www.arkitera.com" target="_blank">Arkitera</a> + <a class="text-amber-400" href="https://www.arkiv.com.tr" target="_blank">Arkiv</a> — project credits, firm news</p>
+          <p>• <a class="text-amber-400" href="https://www.turizmprojedergisi.com" target="_blank">Turizm Proje Dergisi</a> + <a class="text-amber-400" href="https://turizmyatirimhaber.com" target="_blank">Turizm Yatırım Haber</a> — hotel investment press</p>
+          <p>• <a class="text-amber-400" href="https://emlakkulisi.com" target="_blank">Emlakkulisi</a> + <a class="text-amber-400" href="https://www.emlaktasondakika.com" target="_blank">Emlakta Son Dakika</a> — real estate / developer news</p>
+          <p>• <a class="text-amber-400" href="https://yigm.ktb.gov.tr/TR-201121/bakanlik-belgeli-tesis-konaklama-istatistikleri.html" target="_blank">Ministry tourism investment certificates</a> — the forward registry of future hotels</p>
+          <p>• <a class="text-amber-400" href="https://www.ihale.gov.tr" target="_blank">EKAP / ihale.gov.tr</a> + <a class="text-amber-400" href="https://www.dmo.gov.tr/Ihale/Liste?type=2" target="_blank">DMO</a> — public FF&E tenders</p>
+          <p>• <a class="text-amber-400" href="https://www.workdesign.com" target="_blank">Work Design Magazine</a> + <a class="text-amber-400" href="https://bi-ozet.com" target="_blank">Bi-Özet</a> — office fit-out features (reveal incumbent suppliers)</p>
+          <p>• Instagram + LinkedIn of all 45 firms — where Turkish studios announce wins first. Use the "in" links in the Accounts tab.</p>
+        </div>
+      </div>
+    </div>
+    <div class="card p-5">
+      <h3 class="font-semibold text-white mb-2">Competitive intel found while hunting</h3>
+      <p class="text-sm text-gray-300">On Habif's Fomo Games office (Jan 2026): furniture was supplied by <b class="text-white">Addo Ofis Mobilyaları</b>, lighting by <b class="text-white">Dark Aydınlatma</b> — these are incumbent vendors to displace. Also note: Sia Moore launched its own furniture/accessories brand (Sia Moore Studio) — partially a competitor, approach accordingly. Pin Architects turned out İstanbul-based (not İzmir), founded 2014, offices İstanbul/London/Lugano/Bodrum.</p>
+    </div>
+  </section>
+
+  <!-- ============ MARKET ============ -->
+  <section id="tab-market" class="tab-panel hidden">
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <div class="card p-4 text-center"><p class="text-xs text-gray-400">TAM — Turkey contract FF&E</p><p class="kpi-num text-2xl font-bold text-white">€720M–1.0B<span class="text-sm text-gray-500">/yr</span></p></div>
+      <div class="card p-4 text-center"><p class="text-xs text-gray-400">SAM — via target design firms</p><p class="kpi-num text-2xl font-bold text-amber-400">€250–450M<span class="text-sm text-gray-500">/yr</span></p></div>
+      <div class="card p-4 text-center"><p class="text-xs text-gray-400">SOM — our target</p><p class="kpi-num text-2xl font-bold text-emerald-400">€10–20M</p><p class="text-xs text-gray-500">3–6% of SAM</p></div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-4 mb-6">
+      <div class="card p-5">
+        <h3 class="font-semibold text-white mb-3">TAM Composition (annual, modeled)</h3>
+        <canvas id="tamChart" height="240"></canvas>
+      </div>
+      <div class="card p-5">
+        <h3 class="font-semibold text-white mb-3">Market Anchors (researched June 2026)</h3>
+        <ul class="text-sm text-gray-300 space-y-2">
+          <li class="flex gap-2"><span class="text-amber-400">●</span> 1,102 five-star + 1,239 four-star hotels in Turkey</li>
+          <li class="flex gap-2"><span class="text-amber-400">●</span> 354 hotel projects completing by end-2026 (≈57,000 rooms)</li>
+          <li class="flex gap-2"><span class="text-amber-400">●</span> Record pipeline: 157 active projects Q1 2026 — Turkey leads Europe with UK & Germany</li>
+          <li class="flex gap-2"><span class="text-amber-400">●</span> ≈€1.9B announced hotel renovation & modernization spend</li>
+          <li class="flex gap-2"><span class="text-amber-400">●</span> ~2,500 registered architecture offices in İstanbul alone</li>
+          <li class="flex gap-2"><span class="text-amber-400">●</span> Hotel FF&E global market ≈ $62B, +6%/yr</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <h3 class="font-semibold text-white mb-3">Universe Narrowing — from market to named accounts</h3>
+      <canvas id="narrowChart" height="120"></canvas>
+      <p class="text-xs text-gray-500 mt-3">Note: the whole game happens inside ~150–250 firms. Every account gets researched; revenue comes from <span class="text-amber-400">repeat specification</span> — one architect relationship yields multiple projects.</p>
+    </div>
+  </section>
+
+  <!-- ============ ICP ============ -->
+  <section id="tab-icp" class="tab-panel hidden">
+    <div class="card p-5 mb-4">
+      <h3 class="font-semibold text-white mb-3">Ideal Customer Profile — firm level</h3>
+      <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead><tr class="text-left border-b border-gray-800"><th class="py-2 pr-4">Criterion</th><th class="py-2 pr-4">Target</th><th class="py-2">Disqualify</th></tr></thead>
+        <tbody class="text-gray-300">
+          <tr class="border-b border-gray-800/50"><td class="py-2 pr-4 text-gray-400">Firm type</td><td class="py-2 pr-4">Architecture / interior firms; turnkey fit-out & PM firms</td><td class="py-2 text-rose-400">Contractors with no design role</td></tr>
+          <tr class="border-b border-gray-800/50"><td class="py-2 pr-4 text-gray-400">Size</td><td class="py-2 pr-4">15–50+ people</td><td class="py-2 text-rose-400">Solo designers, &lt;10-person studios</td></tr>
+          <tr class="border-b border-gray-800/50"><td class="py-2 pr-4 text-gray-400">Verticals</td><td class="py-2 pr-4">Hospitality + corporate office</td><td class="py-2 text-rose-400">Only mass residential / retail chains</td></tr>
+          <tr class="border-b border-gray-800/50"><td class="py-2 pr-4 text-gray-400">Geography</td><td class="py-2 pr-4">İstanbul → Ankara → İzmir</td><td class="py-2 text-rose-400">Outside top-3 (for now)</td></tr>
+          <tr class="border-b border-gray-800/50"><td class="py-2 pr-4 text-gray-400">Project budget</td><td class="py-2 pr-4">FF&E ≥ €250K</td><td class="py-2 text-rose-400">Economy-tier projects</td></tr>
+          <tr><td class="py-2 pr-4 text-gray-400">Behavior</td><td class="py-2 pr-4">4+ qualifying projects/yr, specifies FF&E</td><td class="py-2 text-rose-400">Own in-house joinery</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-4 mb-4">
+      <div class="card persona-card p-5 border">
+        <p class="badge bg-amber-900 text-amber-300 mb-2 inline-block">DECISION MAKER</p>
+        <h4 class="font-bold text-white">A · Founding Partner / Principal</h4>
+        <p class="text-xs text-gray-500 mb-2">40–60 · firm bears their name · approves brands</p>
+        <p class="text-sm text-gray-300 mb-2"><span class="text-gray-500">Pains:</span> import lead times, EUR price inflation from Italian brands, off-spec deliveries.</p>
+        <p class="text-sm text-emerald-400">Win with: factory visit + custom sample from THEIR drawing + trade terms. Heads (Burçin/Zeynep) own this outreach.</p>
+      </div>
+      <div class="card persona-card p-5 border">
+        <p class="badge bg-sky-900 text-sky-300 mb-2 inline-block">CHAMPION — ENTRY POINT</p>
+        <h4 class="font-bold text-white">B · Project Lead / Sr. Interior Architect</h4>
+        <p class="text-xs text-gray-500 mb-2">28–40 · draws FF&E schedule · shortlists suppliers</p>
+        <p class="text-sm text-gray-300 mb-2"><span class="text-gray-500">Pains:</span> slow quotes killing deadlines, suppliers who can't do true custom, blame when vendors slip.</p>
+        <p class="text-sm text-emerald-400">Win with: 48h quote SLA, material box, dedicated contact (Zeynep/Burçin).</p>
+      </div>
+      <div class="card persona-card p-5 border">
+        <p class="badge bg-violet-900 text-violet-300 mb-2 inline-block">BUDGET HOLDER</p>
+        <h4 class="font-bold text-white">C · Procurement / Technical Office</h4>
+        <p class="text-xs text-gray-500 mb-2">at fit-out & PM firms · issues the PO</p>
+        <p class="text-sm text-gray-300 mb-2"><span class="text-gray-500">Pains:</span> FX exposure mid-project, vendors failing volume + deadline together.</p>
+        <p class="text-sm text-emerald-400">Win with: EUR-fixed quotes 60–90 days, capacity proof, contract references.</p>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <h3 class="font-semibold text-white mb-3">Trigger Events — time outreach to these</h3>
+      <div class="grid md:grid-cols-4 gap-3 text-sm text-gray-300">
+        <div class="bg-gray-900 rounded-lg p-3">New hotel project announced (354 completing by end-2026)</div>
+        <div class="bg-gray-900 rounded-lg p-3">Renovation cycle — 4–5 star hotels renovate every 5–7 yrs</div>
+        <div class="bg-gray-900 rounded-lg p-3">Corporate HQ relocation / consolidation news</div>
+        <div class="bg-gray-900 rounded-lg p-3">Firm wins hospitality tender or announces expansion</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OUTBOUND ============ -->
+  <section id="tab-outbound" class="tab-panel hidden">
+    <div class="card p-5 mb-4 border-amber-700 border">
+      <h3 class="font-semibold text-amber-400 mb-1">Prerequisite: formalize the trade program FIRST</h3>
+      <p class="text-sm text-gray-300">Terms are currently case-by-case — that kills first meetings. One page: <span class="text-white">15–20% trade discount (tiered) OR 8–10% specifier commission</span> + 48h quote SLA + free sampling for active projects + <span class="text-white">EUR-fixed quotes valid 60–90 days</span>. This one-pager IS the outbound hook.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-4 mb-4">
+      <div class="card p-5">
+        <h3 class="font-semibold text-white mb-3">3-Week Sequence (per account)</h3>
+        <table class="w-full text-sm">
+          <thead><tr class="text-left border-b border-gray-800"><th class="py-2">Day</th><th class="py-2">Channel</th><th class="py-2">Message</th></tr></thead>
+          <tbody class="text-gray-300">
+            <tr class="border-b border-gray-800/50"><td class="py-2">1</td><td>LinkedIn</td><td>Connect + note referencing THEIR project, no pitch</td></tr>
+            <tr class="border-b border-gray-800/50"><td class="py-2">3</td><td>Email #1</td><td>Trade program + reference project + one-vendor angle</td></tr>
+            <tr class="border-b border-gray-800/50"><td class="py-2">7</td><td>Phone</td><td>Offer material library box — foot in the door</td></tr>
+            <tr class="border-b border-gray-800/50"><td class="py-2">10</td><td>Email #2</td><td>Cost case study: −30–50% vs import brand, in EUR</td></tr>
+            <tr class="border-b border-gray-800/50"><td class="py-2">15</td><td>LinkedIn</td><td><span class="text-amber-400">Head (Burçin/Zeynep) → Principal:</span> factory visit invitation</td></tr>
+            <tr><td class="py-2">21</td><td>Email</td><td>Break-up: trade terms attached, door stays open</td></tr>
+          </tbody>
+        </table>
+        <p class="text-xs text-gray-500 mt-3">Meeting ladder: material box → showroom coffee → factory tour → <span class="text-amber-400">custom sample from their drawing</span> (highest conversion, reserve for live projects)</p>
+      </div>
+      <div class="card p-5">
+        <h3 class="font-semibold text-white mb-3">Weekly KPI Targets (team)</h3>
+        <canvas id="kpiChart" height="200"></canvas>
+        <div class="mt-3 text-xs space-y-1 text-gray-400">
+          <p><span class="text-rose-400">Red flags:</span> &lt;2 meetings/wk for 2 weeks · reply rate &lt;5% · &lt;1 qualified opp/wk by week 6</p>
+          <p>Month 3: meetings but no deals → trade-terms problem. No meetings → list/messaging problem.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card p-5">
+      <h3 class="font-semibold text-white mb-3">Team Structure</h3>
+      <div class="grid md:grid-cols-3 gap-3 text-sm mb-3">
+        <div class="bg-gray-900 rounded-lg p-4"><p class="font-semibold text-white mb-1">Burçin <span class="badge bg-sky-900 text-sky-300 ml-1">Head</span></p><p class="text-gray-400">Leads half the universe. Persona A & B outreach incl. principal-level invitations, meetings, quotes.</p></div>
+        <div class="bg-gray-900 rounded-lg p-4"><p class="font-semibold text-white mb-1">Zeynep <span class="badge bg-sky-900 text-sky-300 ml-1">Head</span></p><p class="text-gray-400">Leads the other half. Same motion, own account list.</p></div>
+        <div class="bg-gray-900 rounded-lg p-4 border border-dashed border-gray-700"><p class="font-semibold text-gray-400 mb-1">CRO (Balamir) — outside the engine</p><p class="text-gray-500">Not in outreach. Weekly pipeline review, removes blockers, approves trade terms, joins only final-stage closings on strategic accounts.</p></div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-3 text-sm">
+        <div class="bg-gray-900 rounded-lg p-4"><p class="font-semibold text-white mb-1">Biricik <span class="badge bg-violet-900 text-violet-300 ml-1">Lighting pod</span></p><p class="text-gray-400">Lighting-led outreach — lighting is specified earlier and faces less import loyalty. Joint meetings when the combo is in play.</p></div>
+        <div class="bg-gray-900 rounded-lg p-4"><p class="font-semibold text-white mb-1">Artun <span class="badge bg-violet-900 text-violet-300 ml-1">Lighting pod</span></p><p class="text-gray-400">Same lighting motion, ~40–50 accounts on the lighting angle.</p></div>
+        <div class="bg-gray-900 rounded-lg p-4"><p class="font-semibold text-white mb-1">İrem <span class="badge bg-blue-900 text-blue-300 ml-1">Sales Rep</span></p><p class="text-gray-400">Sales rep — manages her own accounts, runs her own outreach and follows the 6-touch sequence independently.</p></div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-3 text-sm mt-3">
+        <div class="bg-gray-900 rounded-lg p-4"><p class="font-semibold text-white mb-1">Elif <span class="badge bg-sky-900 text-sky-300 ml-1">Sales rep</span></p><p class="text-gray-400">Owns a named account list under the heads. Persona B outreach, meetings, quotes. Weekly: 10 accounts researched, 20 touches, 2+ meetings.</p></div>
+        <div class="bg-gray-900 rounded-lg p-4"><p class="font-semibold text-white mb-1">Beliz <span class="badge bg-sky-900 text-sky-300 ml-1">Sales rep</span></p><p class="text-gray-400">Same motion, own account list. With 4 account owners + lighting pod, the per-person load drops to ~1 meeting/week each.</p></div>
+        <div class="bg-gray-900 rounded-lg p-4 border border-dashed border-gray-700"><p class="font-semibold text-gray-400 mb-1">Account split</p><p class="text-gray-500">~200 accounts ÷ 4 owners (Burçin, Zeynep, Elif, Beliz) ≈ 50 each. Lighting pod overlays the same accounts on the lighting angle.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PLAN ============ -->
+  <section id="tab-plan" class="tab-panel hidden">
+    <div class="card p-5 mb-4">
+      <h3 class="font-semibold text-white mb-4">First 14 Days — click to mark done</h3>
+      <div id="planList" class="space-y-2 text-sm"></div>
+      <p class="text-xs text-gray-500 mt-3" id="planProgress"></p>
+    </div>
+    <div class="card p-5">
+      <h3 class="font-semibold text-white mb-3">Decision Gates</h3>
+      <div class="grid md:grid-cols-3 gap-3 text-sm text-gray-300">
+        <div class="bg-gray-900 rounded-lg p-4"><p class="text-amber-400 font-semibold">Week 1</p><p>Validate avg deal size from last 10 Kurumsal deals restated in EUR. If avg ≈ €300K → need 33 deals, not 20 → revisit capacity.</p></div>
+        <div class="bg-gray-900 rounded-lg p-4"><p class="text-amber-400 font-semibold">Month 3</p><p>Funnel checkpoint vs model. Fix trade terms or messaging based on where conversion breaks.</p></div>
+        <div class="bg-gray-900 rounded-lg p-4"><p class="text-amber-400 font-semibold">Month 6</p><p>€20M path decision: bigger deals (€750K–1M packages) vs hotel-direct motion vs 24-month timeline.</p></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// ---- Tabs ----
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+  document.getElementById('tab-' + b.dataset.tab).classList.remove('hidden');
+}));
+
+const gridCol = 'rgba(16,17,20,.07)', tickCol = '#686b82';
+Chart.defaults.color = tickCol; Chart.defaults.borderColor = gridCol;
+
+// ---- Funnel chart (live) ----
+const funnelTargets = [340, 170, 85, 50, 20];
+const funnelLabels = ['Replied / Engaged', 'Meetings', 'Qualified opps', 'Proposals', 'Closed deals'];
+const funnelChart = new Chart(document.getElementById('funnelChart'), {
+  type: 'bar',
+  data: {
+    labels: funnelLabels,
+    datasets: [
+      { label: 'Target', data: funnelTargets, backgroundColor: 'rgba(180,180,200,0.18)', borderRadius: 6, borderSkipped: false },
+      { label: 'Actual', data: [0,0,0,0,0], backgroundColor: ['#c4c6d4','#9497a9','#855bfb','#5741d8','#7132f5'], borderRadius: 6, borderSkipped: false }
+    ]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, color: '#686b82' } },
+      tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.x + (c.datasetIndex===1 && c.dataIndex===4 ? ' won' : '') } }
+    },
+    scales: { x: { grid: { color: gridCol }, stacked: false }, y: { grid: { display: false } } }
+  }
+});
+function updateFunnelChart(){
+  if(!window.accData) return;
+  const actual = [
+    accData.filter(a=>RANK[a.status]>=2).length,
+    accData.filter(a=>RANK[a.status]>=3).length,
+    accData.filter(a=>RANK[a.status]>=4).length,
+    accData.filter(a=>RANK[a.status]>=5).length,
+    accData.filter(a=>RANK[a.status]>=6).length
+  ];
+  funnelChart.data.datasets[1].data = actual;
+  funnelChart.update();
+}
+
+// ---- TAM chart ----
+new Chart(document.getElementById('tamChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['New-build hotels €250–400M', 'Hotel renovation ≈€250M', 'Premium F&B €120–220M', 'Office fit-out €100–160M'],
+    datasets: [{ data: [325, 250, 170, 130], backgroundColor: ['#7132f5','#5741d8','#5b1ecf','#855bfb'], borderWidth: 2, borderColor: '#ffffff' }]
+  },
+  options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }, tooltip: { callbacks: { label: c => ' ~€' + c.parsed + 'M/yr (midpoint)' } } }, cutout: '60%' }
+});
+
+// ---- Narrowing chart ----
+new Chart(document.getElementById('narrowChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Registered offices (İst alone)', 'Mid-large 15–50+ (3 cities)', 'Hospitality/office premium focus', 'Year-1 named accounts'],
+    datasets: [{ data: [2500, 475, 200, 200], backgroundColor: ['#c4c6d4','#9497a9','#5741d8','#7132f5'], borderRadius: 6 }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { type: 'logarithmic', grid: { color: gridCol } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+});
+
+// ---- KPI chart ----
+new Chart(document.getElementById('kpiChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Accounts researched', 'Touches', 'Meetings', 'Qualified opps', 'Quotes out'],
+    datasets: [{ label: 'Weekly target', data: [20, 60, 4, 2, 2], backgroundColor: '#5b1ecf', borderRadius: 6 }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridCol } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+});
+
+// ---- Interactive calculator ----
+const dealSlider = document.getElementById('dealSlider'), targetSlider = document.getElementById('targetSlider');
+function recalc() {
+  const deal = +dealSlider.value, target = +targetSlider.value;
+  document.getElementById('dealSizeLabel').textContent = '€' + deal + 'K';
+  document.getElementById('targetLabel').textContent = '€' + target + 'M';
+  const deals = Math.ceil(target * 1000 / deal);
+  const meetings = Math.ceil(deals / 0.4 / 0.6 / 0.5); // close 40%, qualify→proposal 60%, meeting→qualified 50%
+  const perWeek = (meetings / 48).toFixed(1);
+  document.getElementById('calcDeals').textContent = deals;
+  document.getElementById('calcMeetings').textContent = meetings;
+  const pw = document.getElementById('calcPerWeek');
+  pw.textContent = perWeek;
+  pw.className = 'kpi-num text-xl font-bold ' + (perWeek <= 5 ? 'text-emerald-400' : perWeek <= 8 ? 'text-amber-400' : 'text-rose-400');
+  const v = document.getElementById('calcVerdict');
+  if (perWeek <= 5) { v.textContent = '✓ Feasible with the 5-person team (2 heads + lighting pod + İrem) — roughly 1 meeting per account owner per week.'; v.className = 'text-xs mt-3 text-emerald-400'; }
+  else if (perWeek <= 8) { v.textContent = 'Tight. Needs a dedicated SDR or stretched timeline.'; v.className = 'text-xs mt-3 text-amber-400'; }
+  else { v.textContent = 'Not feasible with current team — universe of 150–250 firms cannot support this meeting volume. Extend timeline or raise avg deal size.'; v.className = 'text-xs mt-3 text-rose-400'; }
+  document.getElementById('kpiDeals').textContent = deals;
+  document.getElementById('kpiMeetings').textContent = meetings;
+  window.tgt = { engaged: meetings*2, meetings: meetings, qualified: Math.ceil(deals/0.4/0.6), proposals: Math.ceil(deals/0.4), deals: deals, revenue: target*1000 };
+  if (window.renderPerf) renderPerf();
+}
+dealSlider.addEventListener('input', recalc); targetSlider.addEventListener('input', recalc); recalc();
+
+// ---- 14-day plan checklist ----
+const plan = [
+  ['Formalize trade program one-pager (EUR terms)', 'Balamir · day 1–3'],
+  ['Restate last 10 Kurumsal deals in EUR — confirm true avg deal size', 'Balamir · day 1–3'],
+  ['Build 200-account sheet (registries, Design Week, hotel press, Sales Navigator)', 'Zeynep & Burçin · day 2–10'],
+  ['Prepare 3 client-approved reference case studies', 'Team · day 3–10'],
+  ['Assemble 25 material library boxes', 'Ops · day 5–14'],
+  ['Write & test sequence messages on first 20 accounts', 'Zeynep & Burçin · day 10–14']
+];
+const planList = document.getElementById('planList');
+let done = new Array(plan.length).fill(false);
+function renderPlan() {
+  planList.innerHTML = plan.map((p, i) => `
+    <div class="flex items-center gap-3 bg-gray-900 rounded-lg p-3 cursor-pointer ${done[i] ? 'opacity-50' : ''}" onclick="toggle(${i})">
+      <span class="w-5 h-5 rounded border ${done[i] ? 'bg-emerald-600 border-emerald-600' : 'border-gray-600'} flex items-center justify-center text-xs text-white">${done[i] ? '✓' : ''}</span>
+      <span class="flex-1 ${done[i] ? 'line-through text-gray-500' : 'text-gray-200'}">${p[0]}</span>
+      <span class="text-xs text-gray-500 whitespace-nowrap">${p[1]}</span>
+    </div>`).join('');
+  document.getElementById('planProgress').textContent = done.filter(Boolean).length + ' / ' + plan.length + ' complete';
+}
+window.toggle = i => { done[i] = !done[i]; renderPlan(); };
+renderPlan();
+
+// ==================== ACCOUNTS WORKSPACE (Clay-style) ====================
+const SEED = [
+["Autoban","İstanbul","Interior/Architecture studio","Hospitality, F&B",1,"Verified","Hilton İstanbul Bosphorus full renovation underway; global hospitality portfolio."],
+["Metex Design Group","İstanbul","Hotel interior design","Hospitality",1,"Verified","Major hotel interiors firm (Sinan Kafadar); Gezi Hotel Bosphorus + international hotels."],
+["GEO_ID","İstanbul","Interior design","Hospitality, F&B",1,"Verified","Mahmut Anlar; W Hotel İstanbul, Maxx Royal Kemer, premium restaurants."],
+["Geomim","İstanbul","Interior architecture","Hospitality, Retail",1,"Verified","Sister practice to GEO_ID; large hospitality fit-out portfolio."],
+["iki design group","İstanbul","Architecture & interiors","Hospitality, Office",1,"Verified","Est. 1995; Sheraton Hotel, Spine Tower."],
+["Arketipo Design","İstanbul","Interior architecture","Hospitality, Office, Spa",1,"Verified","27+ yrs; hotels, spas, offices; 100+ projects incl. international."],
+["Zeynep Fadıllıoğlu Design","İstanbul","Interior design","Hospitality, Luxury residential",1,"High","Internationally known hospitality & luxury interiors."],
+["Hakan Ezer Interiors","İstanbul","Interior design","Hospitality, Luxury residential",1,"Medium","Premium İstanbul interiors practice."],
+["Toner Architects","İstanbul","Architecture/interiors","Hospitality",1,"Medium","Hotel projects portfolio."],
+["Sayka İnşaat & Mimarlık","İstanbul","Design-build / fit-out","Hospitality",1,"Medium","Hotel fit-out contractor + design; FF&E budget holder."],
+["Tabanlıoğlu Architects","İstanbul","Architecture","Hospitality, Office",1,"Verified","Ranked #1 architecture firm in Türkiye (Architizer); hotel & HQ projects."],
+["Emre Arolat Architecture (EAA)","İstanbul","Architecture","Hospitality, Office",1,"High","International practice; hospitality flagships."],
+["Tago Architects","İstanbul","Architecture & interiors","Office, Hospitality",1,"High","Mid-large İstanbul practice; tower & office interiors."],
+["Dilekci Architects (DDA)","İstanbul","Architecture","Hospitality",2,"Medium","Hotel and resort projects."],
+["Avcı Architects","İstanbul","Architecture","Office, Hospitality",2,"Medium","Corporate office buildings & interiors."],
+["Kreatif Architects","İstanbul","Architecture & interiors","Office",2,"Medium","Corporate HQ projects."],
+["Studio Vertebra","İstanbul","Architecture & interiors","Office, Hospitality",1,"High","Fast-growing mid-large practice; office & hotel interiors."],
+["Öney Architecture","İstanbul","Architecture","Hospitality",2,"Medium","Hotel specialization."],
+["OSO Architecture","İstanbul","Office interior + turnkey","Office",1,"Verified","Elite corporate clients; design + engineering + turnkey execution."],
+["Habif Mimarlık","İstanbul","Office interior architecture","Office",1,"High","One of the best-known corporate office interior firms in Türkiye."],
+["Bakırküre Architects","İstanbul","Architecture & interiors","Office",1,"High","Corporate interiors for multinationals."],
+["Mimaristudio","İstanbul","Office interior architecture","Office",1,"High","Office design specialist; multinational clients."],
+["FEINE Architecture","İstanbul","Interior design + turnkey","Office, F&B",2,"Verified","Concept-to-turnkey delivery."],
+["Alya Mimarlık","İstanbul","Interior arch. + build","Office, Commercial",2,"Verified","400+ projects since 2005; design+build under one roof."],
+["Qara Qalem","İstanbul","Interior architecture","Office",2,"Verified","Award-winning corporate/office specialist."],
+["Muti Interior","İstanbul","Interior design + turnkey","Office",2,"Verified","Office design & turnkey implementation."],
+["Tepeli Mimarlık","İstanbul","Interior architecture","Office",3,"Verified","Office & fit-out design."],
+["Fatih Toker Mimarlık","İstanbul","Interior architecture","Office",3,"Verified","Human-centered office design."],
+["Hemdem Interior","İstanbul","Interior arch. & furnishing","Office, Residential",3,"Verified","Interior + furnishing studio."],
+["Sia Moore","İstanbul","Interior + turnkey","Hospitality, Office",2,"High","Consultancy, design, fit-out & turnkey; international projects."],
+["Vem Interiors","İstanbul","Turnkey fit-out","Office, Residential",3,"Verified","Turnkey fit-out solutions."],
+["Mest İç Mimarlık","İstanbul","Interior architecture","Office, Commercial",3,"Low","Corporate interiors — VERIFY before outreach."],
+["Metrika İç Mimarlık","İstanbul","Office fit-out design-build","Office",2,"Low","Office fit-out specialist — VERIFY before outreach."],
+["A Tasarım Mimarlık","Ankara","Architecture","Hospitality, Office",1,"Verified","Ali Osman Öztürk, est. 1997; major hotel & public projects."],
+["Yazgan Design Architecture","Ankara","Architecture + design-build","Hospitality, Office",1,"Verified","Est. 2003; 8M+ m² designed; hotels & offices, international."],
+["Öncüoğlu Architects","Ankara","Architecture","Office",2,"Medium","Large Ankara practice; corporate buildings."],
+["Hatırlı Mimarlık","Ankara","Architecture","Office, Hospitality",2,"Medium","Established Ankara practice."],
+["ONZ Architects","Ankara","Architecture","Office",3,"Medium","Award-winning Ankara studio."],
+["Saud Design","Ankara","Interior architecture","Office, Residential",3,"Verified","Ankara interior firm."],
+["Ayaz Ergin İç Mimarlık","Ankara","Interior architecture","Office, Commercial",3,"Verified","Design + implementation atelier."],
+["Pin Architects","İzmir","Architecture","Hospitality, Public",2,"Medium","Award-winning İzmir practice."],
+["Eke Mimarlık","İzmir","Architecture","Office, Hospitality",3,"Low","Established İzmir firm — VERIFY."],
+["Nota Mimarlık","İzmir","Architecture & interiors","Office, Commercial",3,"Low","İzmir practice — VERIFY."],
+["Sanayi313 (Atelier)","İstanbul","Design studio","F&B, Retail",3,"Low","Premium F&B concepts; smaller but high influence — VERIFY fit."],
+["Autoban alumni studios","İstanbul","Interior design","Hospitality",3,"Low","Track spin-off studios of major hospitality practices — verify fit before outreach."]
+];
+const STATUSES=["Not contacted","Researching","Contacted","Replied","Meeting","Qualified","Quoted","Won","Lost","Out of scope"];
+const OWNERS=["","Burçin","Zeynep","Biricik","Artun","İrem","Elif","Beliz"];
+const RANK={"Not contacted":0,"Researching":0,"Contacted":1,"Replied":2,"Meeting":3,"Qualified":4,"Quoted":5,"Won":6,"Lost":2,"Out of scope":-1};
+
+// ── GitHub sync ──────────────────────────────────────────────────────────────
+const SYNC={repo:"Mozaikdesign/gtm-data",token:"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",branch:"main",path:"accounts.json"};
+let _syncTimer=null,_whoami=localStorage.getItem('mozaikWho')||'';
+function syncStatus(msg,ok){
+  const el=document.getElementById('syncStatus');
+  const dot=document.getElementById('syncDot');
+  const msgEl=document.getElementById('syncMsg');
+  if(!el)return;
+  msgEl.textContent=msg;
+  if(ok===false){
+    el.style.background='#2e0d0d';el.style.borderColor='#7a1c1c';
+    el.style.color='#f87171';dot.style.background='#f87171';dot.style.animation='none';
+  } else if(ok===true){
+    el.style.background='#0d2e1e';el.style.borderColor='#1a5c38';
+    el.style.color='#34d399';dot.style.background='#34d399';dot.style.animation='pulse 2s infinite';
+  } else {
+    el.style.background='#1a1b22';el.style.borderColor='#2e3040';
+    el.style.color='#a0a0b0';dot.style.background='#a0a0b0';dot.style.animation='pulse 1s infinite';
+  }
+}
+async function remoteLoad(){
+  syncStatus('Syncing…');
+  try{
+    const r=await fetch('https://api.github.com/repos/'+SYNC.repo+'/contents/'+SYNC.path,{headers:{Authorization:'token '+SYNC.token,Accept:'application/vnd.github.v3+json'}});
+    if(!r.ok){syncStatus('Sync error',false);return;}
+    const j=await r.json();
+    const remote=JSON.parse(atob(j.content.replace(/\n/g,'')));
+    const map=Object.fromEntries(accData.map(a=>[a.id,a]));
+    remote.forEach(ra=>{const la=map[ra.id];if(!la||((ra._ts||0)>(la._ts||0)))map[ra.id]=ra;});
+    remote.forEach(ra=>{if(!map[ra.id])map[ra.id]=ra;});
+    accData=Object.values(map).sort((a,b)=>a.id-b.id);
+    accSave();accRender();syncStatus('Synced '+new Date().toLocaleTimeString(),true);
+  }catch(e){syncStatus('Offline',false);}
+}
+async function pushAll(){
+  const content=btoa(unescape(encodeURIComponent(JSON.stringify(accData,null,2))));
+  try{
+    let sha='';
+    const r=await fetch('https://api.github.com/repos/'+SYNC.repo+'/contents/'+SYNC.path,{headers:{Authorization:'token '+SYNC.token,Accept:'application/vnd.github.v3+json'}});
+    if(r.ok){const j=await r.json();sha=j.sha;}
+    const body={message:'Update accounts — '+(_whoami||'team')+' '+new Date().toISOString(),content:content,branch:SYNC.branch};
+    if(sha)body.sha=sha;
+    const r2=await fetch('https://api.github.com/repos/'+SYNC.repo+'/contents/'+SYNC.path,{method:'PUT',headers:{Authorization:'token '+SYNC.token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(r2.ok){syncStatus('Saved to team data ✓',true);}else{syncStatus('Push failed',false);}
+  }catch(e){syncStatus('Offline',false);}
+}
+function schedulePush(){clearTimeout(_syncTimer);_syncTimer=setTimeout(pushAll,1500);}
+function whoami(){
+  if(!_whoami){const n=prompt('Your name? (shown in sync log)');if(n){_whoami=n.trim();localStorage.setItem('mozaikWho',_whoami);}}
+  return _whoami;
+}
+setInterval(remoteLoad,90*1000);
+const CHECKLIST=["Verify firm exists & size (15–50+) on LinkedIn","Find Persona A — founding partner / principal","Find Persona B — project lead / senior interior architect","Check portfolio for active hotel/office project (signal)","Confirm they specify imported furniture brands (price pain)","Find email + phone + Instagram","Log lighting angle: do their projects include decorative lighting?"];
+
+let accData = JSON.parse(localStorage.getItem('mozaikGTM') || 'null') || SEED.map((r,i)=>({
+  id:i, name:r[0], city:r[1], type:r[2], vert:r[3], tier:r[4], conf:r[5], notes:r[6],
+  owner:"", status:"Not contacted", signal:"", personaA:"", personaB:"", contact:"", val:500, checks:Array(CHECKLIST.length).fill(false), log:""
+}));
+
+// Enrichment patch (websites verified via research June 2026; signals from press) — fills empty fields even on saved data
+const PATCH = {
+"Autoban":{web:"https://autoban.com",li:"https://www.linkedin.com/company/autoban",sig:"Hilton İstanbul Bosphorus $90M renovation relaunched Apr 2026 — spa & suite phases complete later in 2026 (live FF&E)"},
+"Metex Design Group":{web:"http://www.metexdesign.com"},
+"GEO_ID":{web:"https://www.geo-id.com",sig:"Hotel projects in design phase; 2 office projects nearing completion (Ankara + Orka Holding HQ)"},
+"Geomim":{web:"https://www.geomim.com",sig:"Sister firm GEO_ID has live hotel + office pipeline"},
+"iki design group":{web:"https://www.ikidg.com",li:"https://www.linkedin.com/company/ikidg",sig:"Signed 5 projects worth $5.5B; 19 awards as of Mar 2026 — heavy active pipeline"},
+"Arketipo Design":{web:"https://arketipodesign.com.tr"},
+"Zeynep Fadıllıoğlu Design":{web:"https://www.zfdesign.com",sig:"Peninsula İstanbul interiors credit — active in luxury hospitality"},
+"Tabanlıoğlu Architects":{web:"https://www.tabanlioglu.com"},
+"Emre Arolat Architecture (EAA)":{web:"https://emrearolat.com"},
+"OSO Architecture":{web:"https://osomimarlik.com"},
+"FEINE Architecture":{web:"https://feine.com.tr"},
+"Alya Mimarlık":{web:"https://alyamimarlik.com.tr"},
+"Qara Qalem":{web:"https://qaraqalem.com"},
+"Muti Interior":{web:"https://www.mutiinterior.com"},
+"Tepeli Mimarlık":{web:"https://www.tepelimimarlik.com"},
+"Fatih Toker Mimarlık":{web:"https://fatihtokermimarlik.com"},
+"Hemdem Interior":{web:"https://www.hemdeminterior.com"},
+"Vem Interiors":{web:"https://veminteriors.com"},
+"A Tasarım Mimarlık":{web:"https://www.atasarim.com.tr",li:"https://tr.linkedin.com/company/a-tasar-m-mimarl-k"},
+"Yazgan Design Architecture":{web:"https://www.arkiv.com.tr/ofis/yazgan-tasarim-mimarlik/1617"},
+"Saud Design":{web:"https://sauddesign.com.tr"},
+"Ayaz Ergin İç Mimarlık":{web:"https://www.ayazergin.com"},
+// Verification pass (June 2026)
+"Toner Architects":{newName:"Toner Mimarlık",conf:"Verified",notes:"VERIFIED: 34 yrs, 3 generations (Mustafa Toner). Hotel renovation specialist: Hilton Adana/Mersin/Ankara/İzmir, Marriott İstanbul West & Yalıkavak, Radisson Blu Ataköy & Vadistanbul, Philip Morris offices. Excellent ICP fit."},
+"Toner Mimarlık":{conf:"Verified"},
+"Hakan Ezer Interiors":{newName:"Hakan Ezer Mimarlık",conf:"Verified",notes:"VERIFIED: boutique luxury interiors, international work (incl. White House flooring credits). Likely small team — high influence, check size."},
+"Dilekci Architects (DDA)":{conf:"Verified",web:"http://www.dilekci.com",notes:"VERIFIED: Durmuş Dilekci; Hilton Doubletree Avcılar, MiíCosta hotel & residences, Buyaka mixed-use. Hospitality fit confirmed."},
+"Avcı Architects":{conf:"Verified",notes:"VERIFIED: est. 1989 London + İstanbul (Selçuk Avcı); offices & sustainability-led projects, international."},
+"Kreatif Architects":{conf:"Verified",notes:"VERIFIED: est. 1995; 1.25M+ m² completed; healthcare, hospitality, commercial, residential."},
+"Öncüoğlu Architects":{newName:"Öncüoğlu+ACP",conf:"Verified",web:"https://www.oncuoglu.com.tr",li:"https://tr.linkedin.com/company/oncuoglu-architecture",notes:"VERIFIED: est. 1964, ~50 staff; Ankara+İstanbul+international offices; mixed-use, office, retail, tourism. 4 European Property Awards 2025."},
+"Öncüoğlu+ACP":{conf:"Verified"},
+"ONZ Architects":{conf:"Verified",web:"https://www.onzmimarlik.com"},
+"Eke Mimarlık":{conf:"Verified",web:"https://www.ekemimarlik.com",notes:"VERIFIED: İzmir, est. 1994 (Öznur Turan Eke); tourism, education, residential, retail."},
+"Nota Mimarlık":{newName:"Not Mimarlık",conf:"Verified",web:"https://www.notmimarlik.com",notes:"VERIFIED (name corrected): Not Mimarlık, İzmir; architecture, interior & urban design."},
+"Not Mimarlık":{conf:"Verified"},
+"Habif Mimarlık":{conf:"Verified",web:"https://www.habifmimarlik.com",notes:"VERIFIED: est. 2005, İstanbul; architecture + interiors. Portfolio skews residential/architecture — confirm current office fit-out share."},
+"Bakırküre Architects":{conf:"Verified",web:"https://bakirkure.com",notes:"VERIFIED: Gürhan Bakırküre, practicing since 1989; İstanbul; national + international (RU, GR, US, DE, IT)."},
+"Studio Vertebra":{conf:"Verified",notes:"VERIFIED: est. 2009, 4 partners; architecture, interiors, restoration; large public + commercial projects."},
+"Tago Architects":{conf:"Verified",notes:"VERIFIED: est. 1995 (Gökhan Aktan Altuğ & Tatsuya Yamamoto); offices, residential, mixed-use incl. Vadistanbul, Sur Yapı offices."},
+"Sia Moore":{conf:"Verified",notes:"VERIFIED: Banu Altay, est. 2009; palaces, parliament buildings, hotels; design + fit-out + turnkey, international."},
+"Zeynep Fadıllıoğlu Design":{conf:"Verified",notes:"VERIFIED: est. 1995; İstanbul + London offices; Peninsula İstanbul, Şakirin Mosque; international luxury hospitality."},
+"Sayka İnşaat & Mimarlık":{conf:"Low - verify",notes:"NOT FOUND in verification search — İrem: confirm exists or REMOVE."},
+"Mest İç Mimarlık":{conf:"Low - verify",notes:"NOT FOUND in verification search — likely remove."},
+"Metrika İç Mimarlık":{conf:"Low - verify",notes:"NOT FOUND in verification search — likely remove."},
+"Hatırlı Mimarlık":{conf:"Low - verify",notes:"Not found in this search round — known Ankara name, İrem verify manually."},
+"Pin Architects":{conf:"Low - verify",notes:"Not found in this search round — İrem verify manually."}
+};
+// Signal log — full hunt across all 45 firms, June 2026
+const SIGLOG = [
+["iki design group","Signed 5 projects worth $5.5B; 19 awards as of Mar 2026 — heavy active pipeline","https://www.emlaktasondakika.com/mimarlik/iki-design-group-5-5-milyar-dolarlik-bes-projeye-imza-atti-60553.html","found"],
+["Autoban","Hilton İstanbul Bosphorus $90M renovation relaunched Apr 2026; spa & suites complete later 2026","https://www.designhotels.com/hotels/turkey/istanbul/gezi-hotel-bosphorus/","found"],
+["GEO_ID","Hotel projects in design phase; 2 office projects nearing completion (Ankara + Orka Holding HQ)","https://www.vbenzeri.com/mimari/multidisipliner-tasarim-yaklasimiyla-geo_id-","found"],
+["Öncüoğlu+ACP","29 active projects in 2025; ZGYO Bayraklı İzmir won 4 Int'l Property Awards; Tashkent City Mall Platinum IADA 2026","https://tr.linkedin.com/company/oncuoglu-architecture","found"],
+["Yazgan Design Architecture","Lagos Arena, 12,000-capacity venue opening Dec 2025 — active delivery phase","https://www.yazgandesign.com/projects","found"],
+["Habif Mimarlık","Completed Fomo Games office (400 m², Gayrettepe) Jan 2026 — incumbents: Addo furniture, Dark lighting","https://bi-ozet.com/2026/01/19/proje-fomo-games/","found"],
+["Mimaristudio","BASF Turkey office redesign (Nidakule, hybrid-work hub) featured Jul 2025","https://www.workdesign.com/2025/07/how-mimaristudio-designed-basf-turkeys-office-into-a-flexible-hub-for-hybrid-work/","found"],
+["Tago Architects","Daire Kartal housing + Folkart Orion İzmir listed as 2025 projects; Dubai office","https://yapidergisi.com/tago-architectsten-anadolu-yakasina-yeni-nesil-konut-tasarimi-daire-kartal/","found"],
+["Zeynep Fadıllıoğlu Design","Peninsula İstanbul interiors credit — active in luxury hospitality","https://www.peninsula.com/en/newsroom/istanbul/news/the-peninsula-istanbul-presents-its-acclaimed-creative-collaborators","found"],
+["Geomim","Sister firm GEO_ID has live hotel + office pipeline","https://www.geomim.com/about","weak"],
+["Kreatif Architects","Active 2026: 1st prize İTO BTM building competition (Eminönü); internship intake Feb 2026","https://kreatifmimarlik.com/en/","weak"],
+["Avcı Architects","Ergin Street Etiler project shown under construction (ongoing)","https://avciarchitects.com/","weak"],
+["Studio Vertebra","Iraq Penthouse listed as 2025 project; international pipeline (Uzbekistan)","https://studiovertebra.com/en/","weak"],
+["Tabanlıoğlu Architects","Active İstanbul/Dubai/Doha offices; Dakar 2026 Games stadium in delivery","https://www.tabanlioglu.com/news_/","weak"],
+["Toner Mimarlık","Running design competition (deadline Feb 2026) — active brand outreach; hotel reno specialist","https://www.tasarimyarismalari.com/toner-mimarlik-adaptif-mimarlik-yarismasi/","weak"],
+["OSO Architecture","Cited in 2025 Top 25 Türkiye firms; recent Carbon Holding & Nomad office fit-outs (dates unverified)","https://osomimarlik.com/en/","weak"],
+["Saud Design","Ongoing residential/office/hotel work, Ankara + Dubai/Qatar/Germany clients (undated)","https://sauddesign.com.tr/projeler","weak"],
+["Not Mimarlık","Alsancak tower + İnci Center 50,000 m² mixed-use in portfolio — stage unconfirmed, manual check","https://mimarobot.com/ofis/profil/not-mimarlik/","weak"],
+["Sia Moore","Launched own furniture/accessories brand (Sia Moore Studio) — partial competitor, approach carefully","https://siamoorestudio.com/","weak"],
+["Hemdem Interior","Live hospitality + residential portfolio TR and abroad (undated)","https://www.hemdeminterior.com/","weak"]
+];
+// Patch newly found signals into accounts (only where signal field is still empty)
+const SIGPATCH = Object.fromEntries(SIGLOG.map(s=>[s[0],s[1]]));
+
+// Persona A (decision makers) — public founder/principal info, gathered June 2026
+const PERSONAS = {
+"Autoban":"Seyhan Özdemir Sarper & Sefer Çağlar — Founders",
+"Metex Design Group":"Sinan Kafadar — Founder & Principal",
+"GEO_ID":"Mahmut Anlar — Founder · Tuğçe Rizeli — Co-founder",
+"Geomim":"Mahmut Anlar — Founder",
+"iki design group":"Murat Kader & Sema Eser Özsaruhan — Founders",
+"Arketipo Design":"Murad Denizaltı, Müge Hansoy Kınacı, Esin Sözer Kalender — Founding Partners",
+"Zeynep Fadıllıoğlu Design":"Zeynep Fadıllıoğlu — Founder",
+"Hakan Ezer Mimarlık":"Hakan Ezer — Founder",
+"Toner Mimarlık":"Mustafa Toner — Founder",
+"Tabanlıoğlu Architects":"Murat Tabanlıoğlu & Melkan Gürsel Tabanlıoğlu — Partners",
+"Emre Arolat Architecture (EAA)":"Emre Arolat — Founder · Gonca Paşolar — Partner",
+"Tago Architects":"Gökhan Aktan Altuğ — Founding Partner (w/ Tatsuya Yamamoto)",
+"Dilekci Architects (DDA)":"Durmuş Dilekci — Founder",
+"Avcı Architects":"Selçuk Avcı — Founding Partner",
+"Kreatif Architects":"Aydan Volkan & Selim Cengiç — Founding Partners",
+"Studio Vertebra":"Mert Eyiler & Tulu Gümüştekin — Co-founders",
+"Öncüoğlu+ACP":"Enis Öncüoğlu — Managing Partner",
+"Yazgan Design Architecture":"Dr. Kerem Yazgan & Dr. Begüm Yazgan — Founders",
+"A Tasarım Mimarlık":"Ali Osman Öztürk — Founder",
+"Eke Mimarlık":"Öznur Turan Eke — Founder · Seçil Şavklı — Partner",
+"Sia Moore":"Banu Altay — Founder",
+"Bakırküre Architects":"Gürhan Bakırküre — Founder"
+};
+// Public office contacts — harvested from the firms' own websites, June 2026 (no guessed emails)
+const CONTACTS = {
+"Autoban":"businessdevelopment@autoban.com (new projects) · info@autoban.com · +90 212 243 8641 · IG @autoban212",
+"Metex Design Group":"info@metexdesign.com · +90 212 288 0527",
+"GEO_ID":"newprojects@geo-id.com · info@geo-id.com · +90 212 236 5704 · IG @geo__id",
+"Geomim":"studio@geomim.com · +90 212 456 45 45 · IG @geomim_",
+"iki design group":"info@ikidg.com · +90 212 278 74 44 · IG @ikidesigngroup_ikidg · NOTE: site hacked w/ spam — verify by phone first",
+"Arketipo Design":"info@arketipodesign.com.tr · +90 216 266 30 14 · IG @arketipodesign",
+"Tabanlıoğlu Architects":"newprojects@tabanlioglu.com · ms@tabanlioglu.com (vendor/materials!) · +90 212 251 2111 · IG @tabanliogluarchitects",
+"Emre Arolat Architecture (EAA)":"info@emrearolat.com · +90 212 284 7073",
+"Dilekci Architects (DDA)":"info@dilekci.com · +90 212 277 11 50 · IG @dilekciarchitects",
+"Öncüoğlu+ACP":"oncuoglu@oncuoglu.com.tr (Ankara) · istanbul@oncuoglu.com.tr · +90 312 473 09 05 · IG @oncuogluarchitects",
+"Habif Mimarlık":"info@habifmimarlik.com · +90 212 322 20 36 · IG @habifmimarlik",
+"FEINE Architecture":"info@feine.com.tr · +90 850 220 91 50 · IG @feinecomtr",
+"Alya Mimarlık":"info@alyamimarlik.com.tr · +90 212 603 05 07 · IG @alyamimarlik",
+"Muti Interior":"info@mutiinterior.com · +90 532 174 25 95 · IG @mutiinterior",
+"Tepeli Mimarlık":"info@tepelimimarlik.com · 0212 909 10 11 · IG @tepelimimarlik",
+"Fatih Toker Mimarlık":"info@fatihtokermimarlik.com · +90 553 699 59 58 (WhatsApp) · IG @fatihtokermimarlik",
+"Hemdem Interior":"hello@hemdeminterior.com · +90 530 675 9078 (WhatsApp) · IG @hemdem.interior",
+"A Tasarım Mimarlık":"no public email (use form) · Ankara +90 312 219 19 20 · İstanbul +90 212 291 01 29",
+"Yazgan Design Architecture":"info@yazgandesign.com · +90 312 466 65 30 · IG @yazgandesignarchitecture",
+"ONZ Architects":"info@onzmimarlik.com (no phone published)",
+"Saud Design":"info@sauddesign.com.tr · +90 312 490 2283 · IG @melisasaud.icmimarlik",
+"Ayaz Ergin İç Mimarlık":"info@ayazergin.com · +90 312 447 06 04",
+"Eke Mimarlık":"info@ekemimarlik.com · İzmir +90 232 446 42 57 · İstanbul +90 212 806 36 15 · IG @ekearchitecture",
+"Not Mimarlık":"info@notmimarlik.com · +90 232 463 39 23 (WhatsApp) · IG @not_mimarlik",
+"Pin Architects":"info@pin.web.tr · +90 212 323 00 07 · IG @pin_architects"
+};
+accData.forEach(a=>{
+  const p = PATCH[a.name] || {};
+  if (p.newName) a.name = p.newName;
+  if (p.conf) a.conf = p.conf;
+  if (p.notes) a.notes = p.notes;
+  a.web = a.web || p.web || "";
+  a.li = a.li || p.li || "";
+  if (p.sig && !a.signal) a.signal = p.sig;
+  if (PERSONAS[a.name] && !a.personaA) a.personaA = PERSONAS[a.name];
+  if (SIGPATCH[a.name] && !a.signal) a.signal = SIGPATCH[a.name];
+  if (CONTACTS[a.name] && !a.contact) a.contact = CONTACTS[a.name];
+});
+// Corrections from the full hunt
+accData.forEach(a=>{
+  if (a.name=="Pin Architects") { a.city="İstanbul"; a.conf="Verified"; a.notes="VERIFIED but corrected: İstanbul-based (not İzmir), est. 2014; offices İstanbul/London/Lugano/Bodrum."; a.web=a.web||"https://www.pin.web.tr"; }
+  if (a.name=="Vem Interiors" && a.conf!="Low - verify") { a.conf="Low - verify"; a.notes="Conflicting research: site found earlier but no presence in deep hunt — İrem verify."; }
+});
+// Render signal log table
+(function(){
+  const t=document.getElementById('sigTable'); if(!t) return;
+  t.innerHTML = `<thead><tr class="text-left border-b border-gray-800 text-xs text-gray-400 uppercase"><th class="py-2">Firm</th><th>Signal</th><th>Strength</th><th>Source</th></tr></thead><tbody>` +
+    SIGLOG.map(s=>`<tr class="border-b border-gray-800/50">
+      <td class="py-2 font-semibold text-white whitespace-nowrap pr-3">${s[0]}</td>
+      <td class="text-gray-300 pr-3">${s[1]}</td>
+      <td><span class="badge ${s[3]=='found'?'bg-emerald-900 text-emerald-300':'bg-amber-900 text-amber-300'}">${s[3]}</span></td>
+      <td><a class="text-amber-400" href="${s[2]}" target="_blank">link</a></td></tr>`).join('') + `</tbody>`;
+})();
+let aview='all', aSortKey='score', aSortDir=-1, openId=null;
+
+function accSave(){ localStorage.setItem('mozaikGTM', JSON.stringify(accData)); }
+function accScore(a){
+  let s = a.tier==1?40 : a.tier==2?25 : 10;
+  if(/Hospitality/.test(a.vert)) s+=15;
+  if(/Office/.test(a.vert)) s+=10;
+  s += a.conf=='Verified'?15 : a.conf=='High'?10 : a.conf=='Medium'?5 : 0;
+  if(a.signal) s+=15;
+  if(a.personaA||a.personaB) s+=5;
+  return Math.min(100,s);
+}
+function accColor(s){ return s>=70?'#149e61': s>=45?'#d59307':'#9497a9'; }
+function accFiltered(){
+  const q=document.getElementById('q').value.toLowerCase();
+  const fo=document.getElementById('fOwner').value, fc=document.getElementById('fCity').value;
+  return accData.filter(a=>{
+    if(aview=='tier1'&&a.tier!=1)return false;
+    if(aview=='hosp'&&!/Hospitality|F&B/.test(a.vert))return false;
+    if(aview=='office'&&!/Office/.test(a.vert))return false;
+    if(aview=='signal'&&!a.signal)return false;
+    if(aview=='verify'&&!(a.conf=='Medium'||a.conf=='Low'))return false;
+    if(aview=='active'&&['Not contacted','Researching','Lost'].includes(a.status))return false;
+    if(fo&&a.owner!=fo)return false;
+    if(fc&&a.city.indexOf(fc)<0)return false;
+    if(q&&!(a.name+a.type+a.vert+a.notes).toLowerCase().includes(q))return false;
+    const fv=document.getElementById('fVal').value;
+    if(fv){const[lo,hi]=fv.split('-').map(Number);if(a.val<lo||a.val>hi)return false;}
+    return true;
+  });
+}
+function accRender(){ updateFunnelChart();
+  const rows=accFiltered().map(a=>({...a,score:accScore(a)}));
+  rows.sort((x,y)=>{ const vx=x[aSortKey],vy=y[aSortKey]; return (vx>vy?1:vx<vy?-1:0)*aSortDir; });
+  document.getElementById('tbody').innerHTML = rows.map(a=>`
+    <tr class="row" onclick="openAcc(${a.id})">
+      <td><b class="text-white">${a.name}</b>
+        <a href="${a.web||'https://www.google.com/search?q='+encodeURIComponent('"'+a.name+'" '+a.city)}" target="_blank" onclick="event.stopPropagation()" title="${a.web?'Website':'Search website (not yet verified)'}" style="text-decoration:none;margin-left:4px;font-size:10px;font-weight:600;color:#7132f5">${a.web?'web':'find'}</a>
+        <a href="${a.li||'https://www.linkedin.com/search/results/companies/?keywords='+encodeURIComponent(a.name)}" target="_blank" onclick="event.stopPropagation()" title="${a.li?'LinkedIn page':'Search on LinkedIn'}" style="text-decoration:none;margin-left:2px;font-size:10px;font-weight:700;color:#0a66c2;background:#fff;border-radius:3px;padding:0 3px">in</a>
+      </td><td>${a.city}</td><td style="color:#686b82">${a.type}</td><td style="font-size:11px">${a.vert}</td>
+      <td><span class="acc-tag at${a.tier}">T${a.tier}</span></td>
+      <td><b style="color:${accColor(a.score)}">${a.score}</b><span class="acc-bar"><i style="width:${a.score}%;background:${accColor(a.score)}"></i></span></td>
+      <td class="cf-${a.conf}">${a.conf}</td>
+      <td onclick="event.stopPropagation()"><select class="acc-sel" onchange="setF(${a.id},'owner',this.value)">${OWNERS.map(o=>`<option ${o==a.owner?'selected':''}>${o}</option>`).join('')}</select></td>
+      <td>${a.signal?'<span style="color:#7132f5;font-weight:700">●</span> <span class="acc-sig">'+a.signal+'</span>':'<span style="color:#c4c6d4">—</span>'}</td>
+      <td onclick="event.stopPropagation()"><select class="acc-sel" style="color:${a.status=='Won'?'#149e61':a.status=='Lost'?'#e2495b':['Meeting','Qualified','Quoted'].includes(a.status)?'#5741d8':'#101114'}" onchange="setF(${a.id},'status',this.value)">${STATUSES.map(s=>`<option ${s==a.status?'selected':''}>${s}</option>`).join('')}</select></td>
+      <td onclick="event.stopPropagation()"><input style="width:60px;border:none;background:transparent;font-size:12px;color:#101114" type="number" value="${a.val}" onchange="setF(${a.id},'val',+this.value)"></td>
+    </tr>`).join('');
+  const contacted=accData.filter(a=>!['Not contacted','Researching'].includes(a.status)).length;
+  const meetings=accData.filter(a=>['Meeting','Qualified','Quoted','Won'].includes(a.status)).length;
+  const pipe=accData.filter(a=>['Qualified','Quoted'].includes(a.status)).reduce((s,a)=>s+a.val,0);
+  const won=accData.filter(a=>a.status=='Won').reduce((s,a)=>s+a.val,0);
+  document.getElementById('accKpis').innerHTML=
+    `<div class="card p-3"><p class="text-xs text-gray-400">Accounts</p><p class="kpi-num text-xl font-bold text-white">${accData.length}</p></div>
+     <div class="card p-3"><p class="text-xs text-gray-400">Contacted</p><p class="kpi-num text-xl font-bold text-white">${contacted}</p></div>
+     <div class="card p-3"><p class="text-xs text-gray-400">Meetings+</p><p class="kpi-num text-xl font-bold text-sky-400">${meetings}</p></div>
+     <div class="card p-3"><p class="text-xs text-gray-400">Qualified pipe</p><p class="kpi-num text-xl font-bold text-amber-400">€${(pipe/1000).toFixed(1)}M</p></div>
+     <div class="card p-3"><p class="text-xs text-gray-400">Won · target €10M</p><p class="kpi-num text-xl font-bold text-emerald-400">€${(won/1000).toFixed(1)}M</p></div>`;
+  document.getElementById('accCount').textContent = accData.length;
+  accSave();
+  renderPerf();
+}
+
+// ---- Live performance ----
+window.renderPerf = function(){
+  const t = window.tgt || { engaged:334, meetings:167, qualified:85, proposals:50, deals:20, revenue:10000 };
+  const reached = r => accData.filter(a => RANK[a.status] >= r).length;
+  const stages = [
+    ["Replied / Engaged", reached(2), t.engaged],
+    ["Meetings", reached(3), t.meetings],
+    ["Qualified opportunities", reached(4), t.qualified],
+    ["Proposals / quotes", reached(5), t.proposals],
+    ["Closed deals (Won)", reached(6), t.deals]
+  ];
+  const bars = document.getElementById('perfBars');
+  if (bars) bars.innerHTML = stages.map(([label, act, tgt]) => {
+    const pct = Math.min(100, Math.round(act/tgt*100));
+    const col = pct >= 100 ? '#149e61' : pct >= 50 ? '#7132f5' : '#5741d8';
+    return `<div>
+      <div class="flex justify-between text-sm mb-1"><span class="text-gray-300">${label}</span><span class="kpi-num"><b style="color:${col}">${act}</b> <span class="text-gray-500">/ ${tgt} target · ${pct}%</span></span></div>
+      <div style="height:14px;background:#ececf1;border-radius:7px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${col};border-radius:7px;transition:width .4s"></div></div>
+    </div>`;
+  }).join('');
+  const won = accData.filter(a=>a.status=='Won').reduce((s,a)=>s+a.val,0);
+  const pipe = accData.filter(a=>['Qualified','Quoted'].includes(a.status)).reduce((s,a)=>s+a.val,0);
+  const rPct = Math.min(100, Math.round(won/t.revenue*100));
+  const rev = document.getElementById('perfRevenue');
+  if (rev) rev.innerHTML = `
+    <div class="flex justify-between text-sm mb-1"><span class="text-gray-300">Won revenue vs target</span><span class="kpi-num"><b class="text-emerald-400">€${(won/1000).toFixed(2)}M</b> <span class="text-gray-500">/ €${(t.revenue/1000).toFixed(0)}M · ${rPct}%</span></span></div>
+    <div style="height:18px;background:#ececf1;border-radius:9px;overflow:hidden"><div style="width:${rPct}%;height:100%;background:#34d399;border-radius:9px;transition:width .4s"></div></div>
+    <p class="text-xs text-gray-500 mt-2">Qualified pipeline (not yet won): <b class="text-amber-400">€${(pipe/1000).toFixed(2)}M</b> — at a 40% close rate this is worth ≈ €${(pipe*0.4/1000).toFixed(2)}M.</p>`;
+  const tbl = document.getElementById('repTable');
+  if (tbl) {
+    const reps = OWNERS.filter(o=>o);
+    const rows = reps.map(o => {
+      const mine = accData.filter(a=>a.owner==o);
+      const rr = r => mine.filter(a=>RANK[a.status]>=r).length;
+      const stalled = mine.filter(a=>RANK[a.status]===0).length;
+      const myPipe = mine.filter(a=>['Qualified','Quoted'].includes(a.status)).reduce((s,a)=>s+a.val,0);
+      const myWon = mine.filter(a=>a.status=='Won').reduce((s,a)=>s+a.val,0);
+      return { o, n:mine.length, c:rr(1), m:rr(3), q:rr(4), w:mine.filter(a=>a.status=='Won').length, stalled, myPipe, myWon };
+    }).sort((a,b)=> b.myWon-a.myWon || b.myPipe-a.myPipe || b.m-a.m);
+    const unassigned = accData.filter(a=>!a.owner).length;
+    tbl.innerHTML = `<thead><tr class="text-left border-b border-gray-800 text-xs text-gray-400 uppercase">
+      <th class="py-2">Rep</th><th>Accounts</th><th>Contacted</th><th>Meetings+</th><th>Qualified+</th><th>Won</th><th>Pipeline €K</th><th>Won €K</th><th>Stalled</th></tr></thead>
+      <tbody>${rows.map((r,i)=>`<tr class="border-b border-gray-800/50 ${i==0&&(r.myWon||r.myPipe||r.m)?'bg-emerald-900/20':''}">
+        <td class="py-2 font-semibold text-white">${i==0&&(r.myWon||r.myPipe||r.m)?'<span style="color:#7132f5">✓</span> ':''}${r.o}</td>
+        <td>${r.n}</td><td>${r.c}</td><td class="text-sky-400 font-semibold">${r.m}</td><td class="text-amber-400 font-semibold">${r.q}</td>
+        <td class="text-emerald-400 font-bold">${r.w}</td><td class="kpi-num">${r.myPipe}</td><td class="kpi-num text-emerald-400">${r.myWon}</td>
+        <td class="${r.stalled>5?'text-rose-400 font-bold':'text-gray-400'}">${r.stalled}${r.stalled>5?' — attention':''}</td></tr>`).join('')}
+      <tr><td class="py-2 text-gray-500" colspan="9">Unassigned accounts: <b class="${unassigned>0?'text-rose-400':'text-gray-400'}">${unassigned}</b>${unassigned>0?' — assign owners so progress can be tracked':''}</td></tr></tbody>`;
+  }
+};
+window.setF=(id,k,v)=>{ whoami(); const a=accData.find(x=>x.id==id); if(!a)return; a[k]=v; a._ts=Date.now(); accSave(); accRender(); if(openId==id)openAcc(id); schedulePush(); };
+window.openAcc=(id)=>{
+  openId=id; const a=accData.find(x=>x.id==id);
+  document.getElementById('accPanel').classList.add('open');
+  document.getElementById('panelInner').innerHTML=`
+    <button style="float:right;cursor:pointer;font-size:18px;color:#686b82;border:none;background:none" onclick="closeAcc()">✕</button>
+    <h2>${a.name}</h2><div class="text-xs text-gray-400 mb-3">${a.city} · ${a.type} · <span class="acc-tag at${a.tier}">Tier ${a.tier}</span> · ICP <b style="color:${accColor(accScore(a))}">${accScore(a)}</b></div>
+    <div class="acc-fld"><label>Why on the list</label><div style="font-size:12px;color:#686b82">${a.notes}</div></div>
+    <div class="acc-sh">Research checklist</div>
+    ${CHECKLIST.map((c,i)=>`<div class="acc-c"><input type="checkbox" ${a.checks[i]?'checked':''} onchange="tickAcc(${a.id},${i},this.checked)"><span>${c}</span></div>`).join('')}
+    <div class="acc-sh">Personas</div>
+    <div class="acc-fld"><label>Persona A — Principal</label><input value="${a.personaA||''}" onchange="setF(${a.id},'personaA',this.value)" placeholder="Name + LinkedIn URL"></div>
+    <div class="acc-fld"><label>Persona B — Project lead</label><input value="${a.personaB||''}" onchange="setF(${a.id},'personaB',this.value)" placeholder="Name + LinkedIn URL"></div>
+    <div class="acc-fld"><label>Contact info</label><input value="${a.contact||''}" onchange="setF(${a.id},'contact',this.value)" placeholder="email · phone · IG"></div>
+    <div class="acc-fld"><label>Website</label><input value="${a.web||''}" onchange="setF(${a.id},'web',this.value)" placeholder="https://…"></div>
+    <div class="acc-fld"><label>LinkedIn page</label><input value="${a.li||''}" onchange="setF(${a.id},'li',this.value)" placeholder="https://www.linkedin.com/company/…"></div>
+    <div class="acc-sh">Signal (active project / trigger)</div>
+    <div class="acc-fld"><input value="${a.signal||''}" onchange="setF(${a.id},'signal',this.value)" placeholder="e.g. Won boutique hotel project in Karaköy, opening 2027"></div>
+    <div class="acc-sh">Activity log</div>
+    <div class="acc-fld"><textarea onchange="setF(${a.id},'log',this.value)" placeholder="Date — touch — outcome">${a.log||''}</textarea></div>
+    <div class="acc-sh">Deal</div>
+    <div style="display:flex;gap:8px">
+      <div class="acc-fld" style="flex:1"><label>Owner</label><select onchange="setF(${a.id},'owner',this.value)">${OWNERS.map(o=>`<option ${o==a.owner?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="acc-fld" style="flex:1"><label>Status</label><select onchange="setF(${a.id},'status',this.value)">${STATUSES.map(s=>`<option ${s==a.status?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="acc-fld" style="flex:1"><label>Est. € K</label><input type="number" value="${a.val}" onchange="setF(${a.id},'val',+this.value)"></div>
+    </div>
+    <button class="acc-btn" style="color:#f87171" onclick="delAcc(${a.id})">Delete account</button>`;
+};
+window.tickAcc=(id,i,v)=>{ const a=accData.find(x=>x.id==id); a.checks[i]=v; a._ts=Date.now(); accSave(); schedulePush(); accRender(); };
+window.closeAcc=()=>{ document.getElementById('accPanel').classList.remove('open'); openId=null; };
+window.addRow=()=>{
+  const name=prompt('Firm name?'); if(!name)return;
+  whoami(); accData.push({id:Math.max(...accData.map(a=>a.id))+1,name,city:'İstanbul',type:'',vert:'',tier:2,conf:'Low',notes:'Added manually — verify.',owner:'',status:'Not contacted',signal:'',personaA:'',personaB:'',contact:'',val:500,checks:Array(CHECKLIST.length).fill(false),log:'',_ts:Date.now()});
+  accSave(); schedulePush(); accRender();
+};
+window.delAcc=(id)=>{ if(confirm('Delete this account?')){ accData=accData.filter(a=>a.id!=id); closeAcc(); accSave(); schedulePush(); accRender(); } };
+window.resetData=()=>{ if(confirm('Reset to the original 45 researched firms? All edits lost.')){ localStorage.removeItem('mozaikGTM'); location.reload(); } };
+window.exportCSV=()=>{
+  const h=['Firm','City','Type','Verticals','Tier','ICP Score','Confidence','Owner','Signal','Status','Est value €K','Persona A','Persona B','Contact','Website','LinkedIn','Notes','Log'];
+  const rows=accData.map(a=>[a.name,a.city,a.type,a.vert,a.tier,accScore(a),a.conf,a.owner,a.signal,a.status,a.val,a.personaA,a.personaB,a.contact,a.web||'',a.li||'',a.notes,a.log]
+    .map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const blob=new Blob(['﻿'+h.join(',')+'\n'+rows.join('\n')],{type:'text/csv'});
+  const u=URL.createObjectURL(blob); const l=document.createElement('a'); l.href=u; l.download='mozaik-gtm-accounts.csv'; l.click();
+};
+document.querySelectorAll('.acc-view').forEach(b=>b.addEventListener('click',()=>{ document.querySelectorAll('.acc-view').forEach(x=>x.classList.remove('active')); b.classList.add('active'); aview=b.dataset.aview; accRender(); }));
+document.querySelectorAll('#accGrid th').forEach(th=>th.addEventListener('click',()=>{ aSortKey=th.dataset.s; aSortDir*=-1; accRender(); }));
+['q','fOwner','fCity','fVal'].forEach(i=>document.getElementById(i).addEventListener('input',accRender));
+accRender();
+</script>
+</body>
+</html>
