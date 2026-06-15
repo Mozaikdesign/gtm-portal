@@ -675,7 +675,7 @@ const OWNERS=["","Burçin","Zeynep","Biricik","Artun","İrem","Elif","Beliz"];
 const RANK={"Not contacted":0,"Researching":0,"Contacted":1,"Replied":2,"Meeting":3,"Qualified":4,"Quoted":5,"Won":6,"Lost":2,"Out of scope":-1};
 
 // ── GitHub sync ──────────────────────────────────────────────────────────────
-const SYNC={repo:"Mozaikdesign/gtm-data",path:"accounts.json",token:"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"};
+const SYNC={repo:"Mozaikdesign/gtm-data",path:"accounts.json",token:""};
 let _syncTimer=null,_whoami=localStorage.getItem('mozaikWho')||'';
 function syncStatus(msg,ok){
   const el=document.getElementById('syncStatus');
@@ -700,7 +700,7 @@ async function remoteLoad(){
     const r=await fetch('https://fragrant-flower-a132.balamir.workers.dev/repos/'+SYNC.repo+'/contents/'+SYNC.path,{headers:{Authorization:'token '+SYNC.token,Accept:'application/vnd.github.v3+json'}});
     if(!r.ok){syncStatus('Sync error',false);return;}
     const j=await r.json();
-    const remote=JSON.parse(atob(j.content.replace(/\n/g,'')));
+    const remote=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\n/g,'')),c=>c.charCodeAt(0))));
     const map=Object.fromEntries(accData.map(a=>[a.id,a]));
     remote.forEach(ra=>{const la=map[ra.id];if(!la||((ra._ts||0)>(la._ts||0)))map[ra.id]=ra;});
     remote.forEach(ra=>{if(!map[ra.id])map[ra.id]=ra;});
