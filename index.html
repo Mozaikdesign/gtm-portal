@@ -675,7 +675,7 @@ const OWNERS=["","Burçin","Zeynep","Biricik","Artun","İrem","Elif","Beliz"];
 const RANK={"Not contacted":0,"Researching":0,"Contacted":1,"Replied":2,"Meeting":3,"Qualified":4,"Quoted":5,"Won":6,"Lost":2,"Out of scope":-1};
 
 // ── GitHub sync ──────────────────────────────────────────────────────────────
-const SYNC={repo:"Mozaikdesign/gtm-data",token:"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"};
+const SYNC={repo:"Mozaikdesign/gtm-data",path:"accounts.json",token:"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"};
 let _syncTimer=null,_whoami=localStorage.getItem('mozaikWho')||'';
 function syncStatus(msg,ok){
   const el=document.getElementById('syncStatus');
@@ -697,7 +697,7 @@ function syncStatus(msg,ok){
 async function remoteLoad(){
   syncStatus('Syncing…');
   try{
-    const r=await fetch('https://api.github.com/repos/'+SYNC.repo+'/contents/'+SYNC.path,{headers:{Authorization:'token '+SYNC.token,Accept:'application/vnd.github.v3+json'}});
+    const r=await fetch('https://fragrant-flower-a132.balamir.workers.dev/repos/'+SYNC.repo+'/contents/'+SYNC.path,{headers:{Authorization:'token '+SYNC.token,Accept:'application/vnd.github.v3+json'}});
     if(!r.ok){syncStatus('Sync error',false);return;}
     const j=await r.json();
     const remote=JSON.parse(atob(j.content.replace(/\n/g,'')));
@@ -712,11 +712,11 @@ async function pushAll(){
   const content=btoa(unescape(encodeURIComponent(JSON.stringify(accData,null,2))));
   try{
     let sha='';
-    const r=await fetch('https://api.github.com/repos/'+SYNC.repo+'/contents/'+SYNC.path,{headers:{Authorization:'token '+SYNC.token,Accept:'application/vnd.github.v3+json'}});
+    const r=await fetch('https://fragrant-flower-a132.balamir.workers.dev/repos/'+SYNC.repo+'/contents/'+SYNC.path,{headers:{Authorization:'token '+SYNC.token,Accept:'application/vnd.github.v3+json'}});
     if(r.ok){const j=await r.json();sha=j.sha;}
     const body={message:'Update accounts — '+(_whoami||'team')+' '+new Date().toISOString(),content:content,branch:SYNC.branch};
     if(sha)body.sha=sha;
-    const r2=await fetch('https://api.github.com/repos/'+SYNC.repo+'/contents/'+SYNC.path,{method:'PUT',headers:{Authorization:'token '+SYNC.token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const r2=await fetch('https://fragrant-flower-a132.balamir.workers.dev/repos/'+SYNC.repo+'/contents/'+SYNC.path,{method:'PUT',headers:{Authorization:'token '+SYNC.token,'Content-Type':'application/json'},body:JSON.stringify(body)});
     if(r2.ok){syncStatus('Saved to team data ✓',true);}else{syncStatus('Push failed',false);}
   }catch(e){syncStatus('Offline',false);}
 }
