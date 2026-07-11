@@ -102,3 +102,51 @@
   function boot(){ ensureUser(function(){ track("login"); }); addUsageButton(); }
   if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded",boot); } else { boot(); }
 })();
+
+
+/* ---- New-signals red dot (per-rep) ---- */
+(function(){
+  "use strict";
+  var WORKER = "https://fragrant-flower-a132.balamir.workers.dev";
+  function showDot(){
+    var u = localStorage.getItem("gtmUser") || "unknown";
+    var key = "gtmSignalsSeen_" + u;
+    var seen = parseInt(localStorage.getItem(key) || "0", 10);
+    if(!seen){ seen = Date.now() - 7*86400000; }
+    fetch(WORKER + "/repos/Mozaikdesign/gtm-data/contents/accounts.json")
+      .then(function(r){ return r.json(); })
+      .then(function(gh){
+        var data = JSON.parse(decodeURIComponent(escape(atob(String(gh.content||"").replace(/\n/g,"")))));
+        var fresh = data.filter(function(a){ return a && a.signal && String(a.signal).trim() && a._ts && a._ts > seen; });
+        var btn = document.querySelector('[data-tab="signals"]');
+        if(!btn) return;
+        var old = btn.querySelector(".sig-dot"); if(old) old.remove();
+        if(fresh.length){
+          var dot = document.createElement("span");
+          dot.className = "sig-dot";
+          dot.title = fresh.length + " yeni sinyal";
+          dot.style.cssText = "display:inline-block;width:8px;height:8px;border-radius:9999px;background:#ef4444;margin-left:6px;vertical-align:middle;box-shadow:0 0 0 2px rgba(239,68,68,.25);animation:sigPulse 1.6s infinite;";
+          if(!document.getElementById("sig-dot-style")){
+            var st = document.createElement("style");
+            st.id = "sig-dot-style";
+            st.textContent = "@keyframes sigPulse{0%,100%{opacity:1}50%{opacity:.45}}";
+            document.head.appendChild(st);
+          }
+          btn.appendChild(dot);
+        }
+        btn.addEventListener("click", function(){
+          localStorage.setItem(key, String(Date.now()));
+          var d = btn.querySelector(".sig-dot"); if(d) d.remove();
+        });
+      })
+      .catch(function(){});
+  }
+  function init(){
+    var tries = 0;
+    var t = setInterval(function(){
+      tries++;
+      if(localStorage.getItem("gtmUser") || tries > 60){ clearInterval(t); showDot(); }
+    }, 500);
+  }
+  if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", init); } else { init(); }
+})();
