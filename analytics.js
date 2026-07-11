@@ -145,7 +145,7 @@
     var tries = 0;
     var t = setInterval(function(){
       tries++;
-      if(localStorage.getItem("gtmUser") || tries > 60){ clearInterval(t); showDot(); }
+      if(document.querySelector('[data-tab="signals"]') || tries > 120){ clearInterval(t); showDot(); }
     }, 500);
   }
   if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", init); } else { init(); }
