@@ -2,7 +2,7 @@
 (function(){
   "use strict";
   var WORKER = "https://fragrant-flower-a132.balamir.workers.dev";
-  var TEAM = ["Burçin","Zeynep","Biricik","Artun","İrem","Elif","Beliz","Balamir"];
+  var TEAM = ["Burçin","Zeynep","Biricik","Artun","İrem","Elif","Beliz","Onur","Balamir"];
 
   function track(event, detail){
     try{
