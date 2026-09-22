@@ -672,6 +672,7 @@ const SEED = [
 ];
 const STATUSES=["Not contacted","Researching","Contacted","Replied","Meeting","Qualified","Quoted","Won","Lost","Out of scope"];
 const OWNERS=["","Burçin","Zeynep","Biricik","Artun","İrem","Elif","Beliz","Onur"];
+      const INACTIVE=["Beliz"]; // left the company - shown greyed out, not assignable
 const RANK={"Not contacted":0,"Researching":0,"Contacted":1,"Replied":2,"Meeting":3,"Qualified":4,"Quoted":5,"Won":6,"Lost":2,"Out of scope":-1};
 
 // ── GitHub sync ──────────────────────────────────────────────────────────────
@@ -931,7 +932,7 @@ function accRender(){ updateFunnelChart();
       <td><span class="acc-tag at${a.tier}">T${a.tier}</span></td>
       <td><b style="color:${accColor(a.score)}">${a.score}</b><span class="acc-bar"><i style="width:${a.score}%;background:${accColor(a.score)}"></i></span></td>
       <td class="cf-${a.conf}">${a.conf}</td>
-      <td onclick="event.stopPropagation()"><select class="acc-sel" onchange="setF(${a.id},'owner',this.value)">${OWNERS.map(o=>`<option ${o==a.owner?'selected':''}>${o}</option>`).join('')}</select></td>
+      <td onclick="event.stopPropagation()"><select class="acc-sel" onchange="setF(${a.id},'owner',this.value)">${OWNERS.map(o=>`<option value="${o}" ${o==a.owner?'selected':''} ${INACTIVE.includes(o)&&o!=a.owner?'disabled':''}>${o}${INACTIVE.includes(o)?' (ayrıldı)':''}</option>`).join('')}</select></td>
       <td>${a.signal?'<span style="color:#7132f5;font-weight:700">●</span> <span class="acc-sig">'+a.signal+'</span>':'<span style="color:#c4c6d4">—</span>'}</td>
       <td onclick="event.stopPropagation()"><select class="acc-sel" style="color:${a.status=='Won'?'#149e61':a.status=='Lost'?'#e2495b':['Meeting','Qualified','Quoted'].includes(a.status)?'#5741d8':'#101114'}" onchange="setF(${a.id},'status',this.value)">${STATUSES.map(s=>`<option ${s==a.status?'selected':''}>${s}</option>`).join('')}</select></td>
       <td onclick="event.stopPropagation()"><input style="width:60px;border:none;background:transparent;font-size:12px;color:#101114" type="number" value="${a.val}" onchange="setF(${a.id},'val',+this.value)"></td>
@@ -1023,7 +1024,7 @@ window.openAcc=(id)=>{
     <div class="acc-fld"><textarea onchange="setF(${a.id},'log',this.value)" placeholder="Date — touch — outcome">${a.log||''}</textarea></div>
     <div class="acc-sh">Deal</div>
     <div style="display:flex;gap:8px">
-      <div class="acc-fld" style="flex:1"><label>Owner</label><select onchange="setF(${a.id},'owner',this.value)">${OWNERS.map(o=>`<option ${o==a.owner?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="acc-fld" style="flex:1"><label>Owner</label><select onchange="setF(${a.id},'owner',this.value)">${OWNERS.map(o=>`<option value="${o}" ${o==a.owner?'selected':''} ${INACTIVE.includes(o)&&o!=a.owner?'disabled':''}>${o}${INACTIVE.includes(o)?' (ayrıldı)':''}</option>`).join('')}</select></div>
       <div class="acc-fld" style="flex:1"><label>Status</label><select onchange="setF(${a.id},'status',this.value)">${STATUSES.map(s=>`<option ${s==a.status?'selected':''}>${s}</option>`).join('')}</select></div>
       <div class="acc-fld" style="flex:1"><label>Est. € K</label><input type="number" value="${a.val}" onchange="setF(${a.id},'val',+this.value)"></div>
     </div>
